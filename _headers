@@ -13,5 +13,14 @@
 /*.svg
   Cache-Control: public, max-age=604800
 
-/assets/*
-  Cache-Control: public, max-age=604800, immutable
+/assets/*.png
+  Cache-Control: public, max-age=604800
+
+/assets/*.svg
+  Cache-Control: public, max-age=604800
+
+/assets/*.css
+  Cache-Control: public, max-age=300, must-revalidate
+
+/assets/*.js
+  Cache-Control: public, max-age=300, must-revalidate
