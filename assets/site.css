@@ -405,3 +405,8 @@ footer{border-top:1px solid var(--line-soft); background:var(--ground); padding:
   .contact-actions{display:grid}
   .contact-actions .btn{width:100%}
 }
+
+/* pricing additions: identical-features note and the lifetime guarantee */
+.pricing-note{color:var(--muted);font-size:13.5px;margin:14px 0 6px}
+.pricing-card .guarantee{font-size:12.5px;line-height:1.45;color:var(--muted);border:1px solid var(--accent-line);background:var(--accent-dim);border-radius:var(--r-sm);padding:9px 11px;margin:0 0 12px}
+.pricing-card .guarantee b{color:var(--accent)}

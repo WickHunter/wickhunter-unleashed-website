@@ -35,6 +35,26 @@
     });
   });
 
+  // Prices come from the Hub, so a price change there shows here without a
+  // deploy. The numbers in the HTML are the fallback when the Hub is unreachable.
+  var hub = document.body.getAttribute('data-hub');
+  if (hub && window.fetch) {
+    fetch(hub.replace(/\/+$/, '') + '/api/billing/plans', { mode: 'cors' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.plans)) return;
+        data.plans.forEach(function (plan) {
+          var card = document.querySelector('.pricing-card[data-plan="' + plan.key + '"]');
+          if (!card || typeof plan.amountCents !== 'number') return;
+          var price = card.querySelector('.price');
+          if (!price) return;
+          var whole = plan.amountCents % 100 === 0;
+          price.textContent = whole ? String(plan.amountCents / 100) : (plan.amountCents / 100).toFixed(2);
+        });
+      })
+      .catch(function () {});
+  }
+
   // FAQ accordion
   document.querySelectorAll('.faq-q').forEach(function (button) {
     button.addEventListener('click', function () {
