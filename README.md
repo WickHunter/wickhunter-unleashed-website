@@ -3,7 +3,7 @@
 Static marketing site for Wick Hunter Unleashed, the self-hosted crypto
 trading bot sold by Wick Hunter Software LLC. No build step — every page is
 plain HTML, and `assets/site.css` / `assets/site.js` carry the shared theme
-and behavior (mobile menu, FAQ accordion, exchange filter, price fill).
+and behavior (mobile menu, FAQ accordion, exchange filter).
 
 The visual theme (colors, radii, cards, buttons, pills, chips) is copied
 verbatim from the Unleashed app itself, so the marketing site and the product
@@ -22,13 +22,20 @@ long-lived caching for `/assets/*`.
 
 ## Two things to edit before/at launch
 
-1. **The price.** It lives in exactly one place: the `data-price` attribute
-   on `<body>` in `index.html` (currently empty — see "Left as placeholders"
-   below). Set it to the monthly price as plain text, e.g. `data-price="49"`.
-   A small inline script (`assets/site.js`) copies that value into every
-   element with class `.price`. Leave it empty and the pricing card falls
-   back to "Pricing shown at checkout" instead of showing a wrong or stale
-   number.
+1. **The price.** There are three plans — Monthly, Yearly, Lifetime — each
+   its own card in the `#pricing` block in `index.html`. Prices are fixed
+   text baked directly into that markup — no body attribute, no JS fill.
+   Changing a price is a one-line edit to the `.price` span in the relevant
+   card, plus the matching change in Stripe/the Hub (the price or product
+   the plan's Buy link resolves to) — otherwise the site and checkout will
+   disagree. The three Buy links are:
+   - Monthly → `/buy?plan=monthly`
+   - Yearly → `/buy?plan=yearly`
+   - Lifetime → `/buy?plan=lifetime`
+
+   `_redirects` sends `/buy` to the Hub and passes the `?plan=` query
+   through untouched, so the Hub is what maps `plan=` to the right Stripe
+   price.
 2. **The Hub redirect targets**, if the Hub ever moves off the bare IP
    `45.76.105.174` onto its own domain — update the two lines in
    `_redirects`.
@@ -44,7 +51,7 @@ USA`) that needs a real jurisdiction filled in.
 ## Structure
 
 ```
-index.html          Home page (marketing + pricing card + install flow)
+index.html          Home page (marketing + pricing plans + install flow)
 thanks/index.html   Stripe checkout success redirect target (noindex)
 terms/index.html    Terms of Service (draft)
 privacy/index.html  Privacy Policy (draft)

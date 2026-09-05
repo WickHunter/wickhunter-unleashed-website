@@ -1,5 +1,5 @@
 // Wick Hunter Unleashed — marketing site
-// Vanilla JS only: mobile menu, FAQ accordion, exchange filter, price fill.
+// Vanilla JS only: mobile menu, FAQ accordion, exchange filter.
 (function () {
   'use strict';
 
@@ -43,20 +43,4 @@
       button.setAttribute('aria-expanded', String(open));
     });
   });
-
-  // Price fill — the price lives in ONE place: body[data-price].
-  // Empty means "not set yet" and the price row falls back to plain text
-  // so the page is never wrong.
-  var price = (document.body.getAttribute('data-price') || '').trim();
-  var priceRows = document.querySelectorAll('.price-row');
-  if (price) {
-    document.querySelectorAll('.price').forEach(function (el) {
-      el.textContent = price;
-    });
-  } else {
-    priceRows.forEach(function (row) {
-      row.textContent = 'Pricing shown at checkout';
-      row.classList.add('price-fallback');
-    });
-  }
 })();

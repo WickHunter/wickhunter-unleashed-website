@@ -60,6 +60,7 @@ ul{margin:0; padding:0}
 .pill.live{color:var(--long); background:var(--long-dim); border:1px solid rgba(47,208,138,.3)}
 .pill.obs{color:var(--warn); background:var(--warn-dim); border:1px solid rgba(242,169,59,.3)}
 .pill.mute{color:var(--dim); background:var(--inset); border:1px solid var(--line)}
+.pill.accent{color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent-line)}
 
 .chip{display:inline-flex; align-items:center; justify-content:center; font:600 10px var(--mono); letter-spacing:.5px; padding:3px 9px; border-radius:99px; border:1px solid var(--line); color:var(--muted)}
 
@@ -71,10 +72,10 @@ ul{margin:0; padding:0}
    row even after the track itself has collapsed to 1fr on narrow screens.
    Zeroing min-width on the direct children of every collapsing grid keeps
    each column free to shrink and wrap instead of forcing horizontal scroll. */
-.hero-grid > *, .flagship-grid > *, .install-layout > *, .faq-grid > *,
+.hero-grid > *, .install-layout > *, .faq-grid > *,
 .contact-panel > *, .company-grid > *, .service-grid > *, .bot-grid > *,
 .exchange-grid > *, .arch-grid > *, .footer-grid > *, .mini-layout > *,
-.install-step > *{min-width:0}
+.install-step > *, .pricing-cards > *{min-width:0}
 
 /* ---------- announcement bar ---------- */
 .announcement{border-bottom:1px solid var(--line-soft); background:var(--raised); color:var(--muted); font-size:12.5px}
@@ -177,7 +178,6 @@ h1{font-size:clamp(40px, 5.2vw, 62px); line-height:1.04; letter-spacing:-.03em; 
 .center-head p{margin-inline:auto}
 
 /* ---------- flagship + pricing ---------- */
-.flagship-grid{display:grid; grid-template-columns:1.05fr .95fr; gap:14px; align-items:stretch}
 .flagship-main{border:1px solid var(--accent-line); background:linear-gradient(150deg, var(--accent-dim), var(--raised) 55%); border-radius:20px; padding:38px; position:relative; overflow:hidden}
 .flagship-main h2{font-size:clamp(34px, 4vw, 50px); line-height:1.03; letter-spacing:-.03em; margin:16px 0 14px; color:var(--ink); max-width:640px}
 .flagship-main p{color:var(--muted); font-size:15.5px; max-width:640px}
@@ -186,18 +186,24 @@ h1{font-size:clamp(40px, 5.2vw, 62px); line-height:1.04; letter-spacing:-.03em; 
 .flagship-feature b{display:block; font-size:12.5px; margin-bottom:5px; color:var(--ink)}
 .flagship-feature span{color:var(--muted); font-size:11px}
 
-.pricing-card{border:1px solid var(--line); background:var(--raised); border-radius:20px; padding:30px; display:flex; flex-direction:column}
-.pricing-card h3{font-size:23px; letter-spacing:-.02em; margin:16px 0 4px; color:var(--ink)}
-.price-row{display:flex; align-items:baseline; gap:3px; margin:14px 0 4px; font-family:var(--mono); color:var(--ink)}
+.pricing-block{margin-top:14px; border:1px solid var(--line); background:var(--raised); border-radius:20px; padding:30px}
+.pricing-head{display:flex; align-items:center; gap:12px; margin-bottom:22px; flex-wrap:wrap}
+.pricing-head h3{font-size:20px; letter-spacing:-.02em; margin:0; color:var(--ink)}
+.pricing-cards{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px}
+.pricing-card{border:1px solid var(--line); background:var(--inset); border-radius:16px; padding:26px; display:flex; flex-direction:column}
+.pricing-card.best{border-color:var(--accent-line)}
+.pricing-card .pill{align-self:flex-start; margin-bottom:14px}
+.pricing-card h4{font-size:11px; text-transform:uppercase; letter-spacing:.07em; font-weight:700; color:var(--muted); margin:0 0 14px}
+.price-row{display:flex; align-items:baseline; gap:3px; margin:0 0 4px; font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--ink)}
 .price-row .curr{font-size:20px; color:var(--muted)}
-.price-row .price{font-size:40px; font-weight:700}
+.price-row .price{font-size:36px; font-weight:700}
 .price-row .period{font-size:13px; color:var(--muted); margin-left:2px}
-.price-row.price-fallback{font-family:var(--sans); font-size:15px; color:var(--muted); font-weight:600}
-.price-caption{color:var(--dim); font-size:11.5px; margin-bottom:20px}
-.pricing-list{display:grid; gap:9px; margin:0 0 24px}
+.price-caption{color:var(--dim); font-size:11.5px; margin-bottom:22px}
+.pricing-actions{margin-top:auto}
+.pricing-list{display:grid; gap:9px; margin:24px 0 0}
 .pricing-list div{border:1px solid var(--line); background:var(--inset); border-radius:10px; padding:11px 12px; display:flex; gap:9px; align-items:start; font-size:12.5px; color:var(--ink)}
 .pricing-list i{width:16px; height:16px; flex:0 0 16px; border-radius:5px; display:grid; place-items:center; background:var(--long-dim); color:var(--long); font-style:normal; font-size:9px; font-weight:700; margin-top:1px}
-.pricing-actions{display:grid; gap:8px; margin-top:auto}
+.pricing-footer{display:flex; justify-content:center; margin-top:20px}
 .fine{color:var(--dim); font-size:11px; margin-top:14px; text-align:center; line-height:1.5}
 
 /* ---------- services ---------- */
@@ -345,7 +351,6 @@ footer{border-top:1px solid var(--line-soft); background:var(--ground); padding:
   .hero-copy{max-width:760px}
   .app-shell{max-width:720px; margin:0 auto}
   .company-grid{grid-template-columns:repeat(2, 1fr)}
-  .flagship-grid{grid-template-columns:1fr}
   .service-grid{grid-template-columns:repeat(2, 1fr)}
   .bot-grid{grid-template-columns:repeat(2, 1fr)}
   .exchange-grid{grid-template-columns:repeat(2, 1fr)}
@@ -377,7 +382,9 @@ footer{border-top:1px solid var(--line-soft); background:var(--ground); padding:
   .mini-layout .mini-card:last-child{display:none}
   .company-grid, .service-grid, .bot-grid, .exchange-grid{grid-template-columns:1fr}
   .section-head{align-items:start; flex-direction:column; gap:16px}
-  .flagship-main, .pricing-card, .contact-panel{padding:24px}
+  .flagship-main, .pricing-block, .contact-panel{padding:24px}
+  .pricing-card{padding:20px}
+  .pricing-cards{grid-template-columns:1fr}
   .flagship-features{grid-template-columns:1fr}
   .exchange-toolbar{align-items:start; flex-direction:column}
   .exchange-note-top{text-align:left}

@@ -16,7 +16,7 @@
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
   <link rel="stylesheet" href="/assets/site.css" />
 </head>
-<body id="top" data-price="">
+<body id="top">
   <div class="announcement">
     <div class="container"><span class="pulse-dot" aria-hidden="true"></span><span><strong>Wick Hunter Unleashed is available.</strong> Self-hosted, licensed per install, cancel anytime.</span></div>
   </div>
@@ -155,7 +155,7 @@
     </section>
 
     <section class="section" id="unleashed">
-      <div class="container flagship-grid">
+      <div class="container">
         <article class="flagship-main">
           <span class="eyebrow">Flagship software</span>
           <h2>Wick Hunter Unleashed</h2>
@@ -167,24 +167,40 @@
             <div class="flagship-feature"><b>Account-scoped automation</b><span>Separate accounts, markets, bot ownership, settings, and reporting.</span></div>
           </div>
         </article>
-        <aside class="pricing-card" id="pricing">
-          <span class="pill live"><i></i> Available now</span>
-          <h3>Unleashed licence</h3>
-          <div class="price-row"><span class="curr">$</span><span class="price" data-price></span><span class="period">/mo</span></div>
-          <p class="price-caption">billed monthly · cancel anytime</p>
+
+        <div class="pricing-block" id="pricing">
+          <div class="pricing-head"><span class="pill live"><i></i> Available now</span><h3>Choose your plan</h3></div>
+          <div class="pricing-cards">
+            <article class="pricing-card">
+              <h4>Monthly</h4>
+              <div class="price-row"><span class="curr">$</span><span class="price">99</span><span class="period">/mo</span></div>
+              <p class="price-caption">per month · cancel anytime</p>
+              <div class="pricing-actions"><a class="btn block" href="/buy?plan=monthly">Buy now</a></div>
+            </article>
+            <article class="pricing-card best">
+              <span class="pill accent"><i></i> Best value</span>
+              <h4>Yearly</h4>
+              <div class="price-row"><span class="curr">$</span><span class="price">699</span><span class="period">/yr</span></div>
+              <p class="price-caption">per year · two months free</p>
+              <div class="pricing-actions"><a class="btn block" href="/buy?plan=yearly">Buy now</a></div>
+            </article>
+            <article class="pricing-card">
+              <h4>Lifetime</h4>
+              <div class="price-row"><span class="curr">$</span><span class="price">999</span></div>
+              <p class="price-caption">one payment · yours for good</p>
+              <div class="pricing-actions"><a class="btn block" href="/buy?plan=lifetime">Buy now</a></div>
+            </article>
+          </div>
           <div class="pricing-list">
             <div><i>✓</i><span>Every shipped bot module</span></div>
             <div><i>✓</i><span>All supported exchanges</span></div>
             <div><i>✓</i><span>Signed in-app updates</span></div>
-            <div><i>✓</i><span>Licence delivered by email in minutes</span></div>
+            <div><i>✓</i><span>One server per licence</span></div>
             <div><i>✓</i><span>Email support</span></div>
           </div>
-          <div class="pricing-actions">
-            <a class="btn block" href="/buy">Buy now</a>
-            <a class="btn quiet block" href="/billing">Manage billing</a>
-          </div>
-          <div class="fine">Your licence runs to the end of each paid period. Cancelling stops future charges; nothing is cut off early.</div>
-        </aside>
+          <div class="pricing-footer"><a class="btn quiet" href="/billing">Manage billing</a></div>
+          <p class="fine">Subscriptions run to the end of each paid period; cancelling stops future charges and nothing is cut off early. Lifetime is a one-time payment for one installation.</p>
+        </div>
       </div>
     </section>
 
@@ -307,7 +323,8 @@
         <div class="faq-list">
           <article class="faq-item open"><button class="faq-q" aria-expanded="true">What is Wick Hunter Unleashed?<i>+</i></button><div class="faq-a"><p>Wick Hunter Unleashed is the flagship self-hosted trading automation software built and licensed by Wick Hunter Software LLC. It runs in your own environment and connects to your own account at a supported exchange.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">How do I buy Unleashed, and how fast do I get access?<i>+</i></button><div class="faq-a"><p>Checkout is a standard card payment through Stripe. Within minutes you'll receive an email with your personal install page — a private link that walks you through installing on your own server.</p></div></article>
-          <article class="faq-item"><button class="faq-q" aria-expanded="false">Can I cancel?<i>+</i></button><div class="faq-a"><p>Yes, any time from the billing portal. Cancelling stops future charges; your licence stays active until the end of the period you already paid for.</p></div></article>
+          <article class="faq-item"><button class="faq-q" aria-expanded="false">What is the difference between the plans?<i>+</i></button><div class="faq-a"><p>Same software and updates on every plan. Monthly and yearly renew automatically and can be cancelled from the billing portal at any time. Lifetime is a single payment for one installation and never renews.</p></div></article>
+          <article class="faq-item"><button class="faq-q" aria-expanded="false">Can I cancel?<i>+</i></button><div class="faq-a"><p>Yes, any time from the billing portal. Cancelling stops future charges; your licence stays active until the end of the period you already paid for. Lifetime is a one-time payment, so there's nothing to cancel.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">How do I reinstall on a new server?<i>+</i></button><div class="faq-a"><p>Open your personal install page again. It issues a fresh one-time install command you can run on the new machine — your licence isn't tied to a specific server.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">What happens if my subscription lapses?<i>+</i></button><div class="faq-a"><p>The bot enters exit-only mode: it keeps closing and protecting existing positions but won't open anything new until the subscription is renewed.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">Does Wick Hunter hold customer funds?<i>+</i></button><div class="faq-a"><p>No. Wick Hunter Software LLC never has custody of your assets. Everything trades through your own account at your chosen exchange.</p></div></article>
