@@ -1,13 +1,28 @@
-# Wick Hunter Unleashed — marketing & checkout website
+# Wick Hunter Software — marketing & checkout website
 
-Static marketing site for Wick Hunter Unleashed, the self-hosted crypto
-trading bot sold by Wick Hunter Software LLC. No build step — every page is
-plain HTML, and `assets/site.css` / `assets/site.js` carry the shared theme
-and behavior (mobile menu, FAQ accordion, exchange filter).
+Static marketing site for Wick Hunter Software LLC. No build step — every
+page is plain HTML, and `assets/site.css` / `assets/site.js` carry the shared
+theme and behavior (mobile menu, FAQ accordion, exchange filter, Hub price
+feed).
 
 The visual theme (colors, radii, cards, buttons, pills, chips) is copied
 verbatim from the Unleashed app itself, so the marketing site and the product
 look like one thing.
+
+## Two pages
+
+- **`/` (`index.html`)** is the catalogue: every product and service the
+  company sells, one card each (`#products`, which also serves as the
+  `#services` anchor), the non-custodial money-flow explainer, and contact.
+  Every "Buy Unleashed" control on this page — header, hero, product card —
+  links to `/unleashed/#pricing`, never straight to checkout.
+- **`/unleashed/` (`unleashed/index.html`)** is the flagship product's own
+  page: the dashboard mockup, feature tiles, the five bot modules
+  (`#bots`), the five exchanges (`#exchanges`), the install guide
+  (`#install`), the three pricing plans (`#pricing`), and the Unleashed FAQ
+  (`#faq`). Only the three plan cards inside `#pricing` link to Stripe
+  checkout (`/buy?plan=...`) — every other Buy control on the site is a link
+  into this page's pricing anchor, not a checkout link.
 
 ## Deploy on Netlify
 
@@ -23,8 +38,10 @@ long-lived caching for `/assets/*`.
 ## Two things to edit before/at launch
 
 1. **The price.** There are three plans — Monthly, Yearly, Lifetime — each
-   its own card in the `#pricing` block in `index.html`. Prices are fixed
-   text baked directly into that markup — no body attribute, no JS fill.
+   its own card in the `#pricing` block in `unleashed/index.html`. Prices are
+   fixed text baked directly into that markup — no body attribute, no JS
+   fill (a `data-hub` fetch on page load overwrites the number with the
+   Hub's live price if it's reachable; the baked-in text is the fallback).
    Changing a price is a one-line edit to the `.price` span in the relevant
    card, plus the matching change in Stripe/the Hub (the price or product
    the plan's Buy link resolves to) — otherwise the site and checkout will
@@ -51,16 +68,18 @@ USA`) that needs a real jurisdiction filled in.
 ## Structure
 
 ```
-index.html          Home page (marketing + pricing plans + install flow)
-thanks/index.html   Stripe checkout success redirect target (noindex)
-terms/index.html    Terms of Service (draft)
-privacy/index.html  Privacy Policy (draft)
-refunds/index.html  Refund policy (draft)
-404.html            Static 404 fallback
-assets/             Brand SVGs/PNGs + shared site.css / site.js
-_headers            Security headers + caching
-_redirects          /buy and /billing → the Hub
-netlify.toml        publish = "."
-robots.txt          Crawling rules
-sitemap.xml         /, /terms/, /privacy/, /refunds/
+index.html            Home page — the product/service catalogue
+unleashed/index.html  Wick Hunter Unleashed product page (features, bots,
+                       exchanges, install guide, pricing, FAQ)
+thanks/index.html     Stripe checkout success redirect target (noindex)
+terms/index.html      Terms of Service (draft)
+privacy/index.html    Privacy Policy (draft)
+refunds/index.html    Refund policy (draft)
+404.html              Static 404 fallback
+assets/               Brand SVGs/PNGs + shared site.css / site.js
+_headers              Security headers + caching
+_redirects            /buy and /billing → the Hub
+netlify.toml          publish = "."
+robots.txt            Crawling rules
+sitemap.xml           /, /unleashed/, /terms/, /privacy/, /refunds/
 ```
