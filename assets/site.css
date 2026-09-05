@@ -397,3 +397,11 @@ footer{border-top:1px solid var(--line-soft); background:var(--ground); padding:
 .pricing-note{color:var(--muted);font-size:13.5px;margin:14px 0 6px}
 .pricing-card .guarantee{font-size:12.5px;line-height:1.45;color:var(--muted);border:1px solid var(--accent-line);background:var(--accent-dim);border-radius:var(--r-sm);padding:9px 11px;margin:0 0 12px}
 .pricing-card .guarantee b{color:var(--accent)}
+
+/* exchange marks + referral links */
+.exchange-logo{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:#fff;padding:6px;overflow:hidden}
+.exchange-logo img{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
+.exchange-card h3 a{color:inherit;text-decoration:none}
+.exchange-card h3 a:hover{color:var(--link)}
+.exchange-cta{display:inline-block;margin-top:12px;font-size:13px;font-weight:650;color:var(--link);text-decoration:none}
+.exchange-cta:hover{color:var(--link-hover, var(--link));text-decoration:underline}
