@@ -3,6 +3,27 @@
 (function () {
   'use strict';
 
+  // Hosting price — the ONE place this number lives. Update it (and the
+  // matching Stripe price on the Hub) to change every "$X/month" hosting
+  // figure on the site at once; every [data-hosting-price] element reads
+  // from here. Flip HOSTING_PRICE_FINAL to true once the operator confirms
+  // the price, and every [data-hosting-price-provisional] element (the
+  // "introductory price" notes) hides itself — nothing else to edit.
+  var HOSTING_PRICE_CENTS = 1500;
+  var HOSTING_PRICE_FINAL = false;
+  (function () {
+    var whole = HOSTING_PRICE_CENTS % 100 === 0;
+    var text = whole ? String(HOSTING_PRICE_CENTS / 100) : (HOSTING_PRICE_CENTS / 100).toFixed(2);
+    document.querySelectorAll('[data-hosting-price]').forEach(function (el) {
+      el.textContent = text;
+    });
+    if (HOSTING_PRICE_FINAL) {
+      document.querySelectorAll('[data-hosting-price-provisional]').forEach(function (el) {
+        el.hidden = true;
+      });
+    }
+  })();
+
   // Mobile menu
   var menuBtn = document.getElementById('menuBtn');
   var mobileMenu = document.getElementById('mobileMenu');
