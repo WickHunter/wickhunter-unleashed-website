@@ -61,6 +61,10 @@ ul{margin:0; padding:0}
 .pill.obs{color:var(--warn); background:var(--warn-dim); border:1px solid rgba(242,169,59,.3)}
 .pill.mute{color:var(--dim); background:var(--inset); border:1px solid var(--line)}
 .pill.accent{color:var(--accent); background:var(--accent-dim); border:1px solid var(--accent-line)}
+/* .pill sets its own display:inline-flex (author origin), which otherwise
+   beats the [hidden] user-agent rule regardless of specificity — same trap
+   as .exchange-card[hidden]/.bot-card[hidden] below, same fix. */
+.pill[hidden]{display:none}
 
 .chip{display:inline-flex; align-items:center; justify-content:center; font:600 10px var(--mono); letter-spacing:.5px; padding:3px 9px; border-radius:99px; border:1px solid var(--line); color:var(--muted)}
 
@@ -75,7 +79,7 @@ ul{margin:0; padding:0}
 .hero-grid > *, .install-layout > *, .faq-grid > *,
 .contact-panel > *, .products-grid > *, .bot-grid > *,
 .exchange-grid > *, .arch-grid > *, .footer-grid > *, .mini-layout > *,
-.install-step > *, .pricing-cards > *{min-width:0}
+.install-step > *, .pricing-cards > *, .two-col > *{min-width:0}
 
 /* ---------- announcement bar ---------- */
 .announcement{border-bottom:1px solid var(--line-soft); background:var(--raised); color:var(--muted); font-size:12.5px}
@@ -405,3 +409,23 @@ footer{border-top:1px solid var(--line-soft); background:var(--ground); padding:
 .exchange-card h3 a:hover{color:var(--link)}
 .exchange-cta{display:inline-block;margin-top:12px;font-size:13px;font-weight:650;color:var(--link);text-decoration:none}
 .exchange-cta:hover{color:var(--link-hover, var(--link));text-decoration:underline}
+
+/* ---------- hosting page additions ---------- */
+/* a generic two-card/two-list row, used for included/not-included, the
+   region+security cards, and the "buy now or later" pair */
+.two-col{display:grid; grid-template-columns:repeat(2, 1fr); gap:14px}
+.two-col h3{font-size:16px; margin:0 0 10px; color:var(--ink)}
+/* a single centered pricing card instead of the three-plan .pricing-cards grid */
+.pricing-cards.single{grid-template-columns:minmax(0,440px); justify-content:center}
+/* "not included" row icon — same list/row shape as .pricing-list, muted mark */
+.pricing-list i.no{background:var(--inset); color:var(--dim)}
+/* compact inline callout banner (used on the home + Unleashed pages to point at /unleashed/hosting/) */
+.hosting-banner{padding:22px 26px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap}
+.hosting-banner h3{margin:8px 0 4px; font-size:18px; color:var(--ink)}
+.hosting-banner p{margin:0; color:var(--muted); font-size:12.5px; max-width:520px}
+
+@media (max-width: 720px){
+  .two-col{grid-template-columns:1fr}
+  .hosting-banner{flex-direction:column; align-items:flex-start}
+  .hosting-banner .btn{width:100%}
+}

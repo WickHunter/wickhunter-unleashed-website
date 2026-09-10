@@ -14,7 +14,7 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/assets/site.css?v=20260905e" />
+  <link rel="stylesheet" href="/assets/site.css?v=20260910a" />
 </head>
 <body data-hub="https://45.76.105.174/hub" id="top">
   <div class="announcement">
@@ -39,6 +39,7 @@
       <nav class="navlinks" aria-label="Primary navigation">
         <a href="/#products">Products</a>
         <a href="/unleashed/">Unleashed</a>
+        <a href="/unleashed/hosting/">Hosting</a>
         <a href="/#services">Services</a>
         <a href="/#contact">Contact</a>
       </nav>
@@ -51,6 +52,7 @@
     <nav class="mobile-menu" id="mobileMenu" aria-label="Mobile navigation">
       <a href="/#products">Products</a>
       <a href="/unleashed/">Unleashed</a>
+      <a href="/unleashed/hosting/">Hosting</a>
       <a href="/#services">Services</a>
       <a href="/#contact">Contact</a>
       <a href="#pricing">Buy Unleashed</a>
@@ -194,7 +196,7 @@
           <div class="update-note">Updates are signed and applied from inside the app — you never re-run the installer to upgrade.</div>
         </div>
         <div class="install-steps">
-          <article class="install-step"><span class="step-number">1</span><div><h3>Buy</h3><p>Checkout is a standard card payment through Stripe. No account creation, no manual invoicing.</p><div class="step-detail"><span class="step-pill">Card checkout</span><span class="step-pill">Instant receipt</span><span class="step-pill">Licence issued immediately</span></div></div></article>
+          <article class="install-step"><span class="step-number">1</span><div><h3>Buy</h3><p>Checkout is a standard card payment through Stripe — no manual invoicing. When you need to manage billing, hosting, or your licence, sign in with a one-time email link — no password to remember.</p><div class="step-detail"><span class="step-pill">Card checkout</span><span class="step-pill">Instant receipt</span><span class="step-pill">Licence issued immediately</span></div></div></article>
           <article class="install-step"><span class="step-number">2</span><div><h3>Open your personal install page</h3><p>We email a private link that is unique to you. It walks you through the rest of setup and is never shared with anyone else.</p><div class="step-detail"><span class="step-pill">Delivered by email</span><span class="step-pill">Private link</span><span class="step-pill">One-time token</span></div></div></article>
           <article class="install-step"><span class="step-number">3</span><div><h3>Run the one-line command</h3><p>On a fresh Ubuntu 22.04+ VPS, paste the command from your install page.</p><p style="margin:8px 0 12px"><a class="btn quiet" href="https://www.youtube.com/watch?v=uaG8oZXLl_I" target="_blank" rel="noopener">▶ Watch the setup video</a></p><div class="code-box"><span class="prompt">$</span> curl -fsSL https://…/install/&lt;your-token&gt; | sudo bash<br><span class="ok">✓ installs Node, the signed Unleashed release, and HTTPS — prints your dashboard URL in about 3 minutes</span></div></div></article>
           <article class="install-step"><span class="step-number">4</span><div><h3>Add restricted exchange API keys</h3><p>Create trade-only credentials on your exchange, disable withdrawals, and apply an IP allowlist where the exchange supports it. Start in demo before trading live.</p><div class="step-detail"><span class="step-pill">Trade only</span><span class="step-pill">Withdrawals off</span><span class="step-pill">IP allowlist</span><span class="step-pill">Demo first</span></div></div></article>
@@ -239,6 +241,19 @@
           </div>
           <div class="pricing-footer"><a class="btn quiet" href="/billing">Manage billing</a></div>
           <p class="fine">Subscriptions run to the end of each paid period; cancelling stops future charges and nothing is cut off early. Lifetime is a one-time payment for one installation.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-tight section-border">
+      <div class="container">
+        <div class="card hosting-banner">
+          <div>
+            <span class="eyebrow">Optional add-on</span>
+            <h3>Don't want to run the server yourself?</h3>
+            <p>Unleashed VPS Hosting is a private cloud server with Unleashed preinstalled — an optional add-on for licensed customers, billed separately from your software licence.</p>
+          </div>
+          <a class="btn" href="/unleashed/hosting/">See hosting <span aria-hidden="true">→</span></a>
         </div>
       </div>
     </section>
@@ -290,7 +305,7 @@
           </a>
           <p>Wick Hunter Software LLC develops non-custodial trading automation software and provides technical consulting, white-label software, custom indicators, and integration development.</p>
         </div>
-        <div class="footer-col"><h4>Products</h4><a href="/unleashed/">Unleashed</a><a href="/unleashed/#pricing">Plans</a><a href="/#services">Services</a></div>
+        <div class="footer-col"><h4>Products</h4><a href="/unleashed/">Unleashed</a><a href="/unleashed/#pricing">Plans</a><a href="/unleashed/hosting/">Hosting</a><a href="/#services">Services</a></div>
         <div class="footer-col"><h4>Legal</h4><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a><a href="/refunds/">Refund policy</a><a href="/billing">Manage billing</a></div>
         <div class="footer-col"><h4>Contact</h4><a href="mailto:admin@wickhunterunleashed.com">admin@wickhunterunleashed.com</a><a href="/unleashed/#faq">FAQ</a></div>
       </div>
@@ -298,6 +313,6 @@
     </div>
   </footer>
 
-  <script src="/assets/site.js?v=20260905e" defer></script>
+  <script src="/assets/site.js?v=20260910a" defer></script>
 </body>
 </html>
