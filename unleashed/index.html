@@ -14,7 +14,7 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/assets/site.css?v=20260914b" />
+  <link rel="stylesheet" href="/assets/site.css?v=20260914c" />
 </head>
 <body data-hub="https://45.76.105.174/hub" id="top">
   <div class="announcement">
@@ -210,30 +210,36 @@
         <div class="pricing-block">
           <div class="pricing-head"><span class="pill live"><i></i> Available now</span><h3>Choose your software licence</h3></div>
           <div class="hosting-choice">
-            <div><strong>Want it ready to use?</strong><p>Rent a private VPS with Wick Hunter preinstalled. Connect up to 5 exchange accounts.</p><span class="hosting-choice-price" data-hosting-short-price>Hosting price being confirmed</span><span class="hosting-choice-note"> · additional to your software licence</span></div>
-            <a class="btn quiet" href="#hosting">View VPS option <span aria-hidden="true">↓</span></a>
+            <div><strong>Want it ready to use?</strong><p>Add the rented VPS inside the plan you want below. Monthly and Yearly show one combined renewal; Lifetime keeps hosting as a separate monthly subscription.</p><span class="hosting-choice-note" data-hosting-selection-status aria-live="polite">Checking hosting availability…</span></div>
+            <a class="btn quiet" href="#hosting">VPS details <span aria-hidden="true">↓</span></a>
           </div>
           <div class="pricing-cards">
-            <article class="pricing-card" data-plan="monthly">
+            <article class="pricing-card" data-plan="monthly" data-base-price-cents="9900">
               <h4>Monthly</h4>
-              <div class="price-row"><span class="curr">$</span><span class="price">99</span><span class="period">/mo</span></div>
-              <p class="price-caption">per month · cancel anytime</p>
-              <div class="pricing-actions"><a class="btn block" href="/buy?plan=monthly">Buy now</a></div>
+              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>99</span><span class="period">/mo</span></div>
+              <p class="price-caption" data-plan-caption>software · renews monthly</p>
+              <label class="hosting-select hosting-select-card"><input type="checkbox" data-hosting-select disabled aria-describedby="monthlyHostingHelp"><span>Add rented VPS · +<span data-hosting-monthly-price>$20/month</span></span></label>
+              <p class="hosting-card-note" id="monthlyHostingHelp" data-hosting-card-status>One $119 monthly software + hosting renewal when selected.</p>
+              <div class="pricing-actions"><a class="btn block" data-software-buy data-base-href="/buy?plan=monthly" href="/buy?plan=monthly">Buy Monthly</a></div>
             </article>
-            <article class="pricing-card" data-plan="yearly">
+            <article class="pricing-card" data-plan="yearly" data-base-price-cents="69900">
               <span class="pill accent"><i></i> Annual billing</span>
               <h4>Yearly</h4>
-              <div class="price-row"><span class="curr">$</span><span class="price">699</span><span class="period">/yr</span></div>
-              <p class="price-caption">per year · renews annually</p>
-              <div class="pricing-actions"><a class="btn block" href="/buy?plan=yearly">Buy now</a></div>
+              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>699</span><span class="period">/yr</span></div>
+              <p class="price-caption" data-plan-caption>software · renews annually</p>
+              <label class="hosting-select hosting-select-card"><input type="checkbox" data-hosting-select disabled aria-describedby="yearlyHostingHelp"><span>Add rented VPS · +<span data-hosting-yearly-price>$240/year</span> (<span data-hosting-monthly-equiv>$20/month</span>)</span></label>
+              <p class="hosting-card-note" id="yearlyHostingHelp" data-hosting-card-status>One $939 annual software + hosting renewal when selected.</p>
+              <div class="pricing-actions"><a class="btn block" data-software-buy data-base-href="/buy?plan=yearly" href="/buy?plan=yearly">Buy Yearly</a></div>
             </article>
-            <article class="pricing-card best" data-plan="lifetime">
+            <article class="pricing-card best" data-plan="lifetime" data-base-price-cents="99900">
               <span class="pill accent"><i></i> Best value</span>
               <h4>Lifetime</h4>
-              <div class="price-row"><span class="curr">$</span><span class="price">999</span></div>
-              <p class="price-caption">one payment</p>
+              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>999</span></div>
+              <p class="price-caption" data-plan-caption>software · one payment</p>
               <p class="guarantee"><b>Source-code guarantee.</b> If Wick Hunter Software ever shuts down, lifetime licence holders receive the full source code.</p>
-              <div class="pricing-actions"><a class="btn block" href="/buy?plan=lifetime">Buy now</a></div>
+              <label class="hosting-select hosting-select-card"><input type="checkbox" data-hosting-select disabled aria-describedby="lifetimeHostingHelp"><span>Add rented VPS · +<span data-hosting-monthly-price>$20/month</span></span></label>
+              <p class="hosting-card-note" id="lifetimeHostingHelp" data-hosting-card-status>$999 software today; confirm the separate $20 monthly hosting subscription next.</p>
+              <div class="pricing-actions"><a class="btn block" data-software-buy data-base-href="/buy?plan=lifetime" href="/buy?plan=lifetime">Buy Lifetime</a></div>
             </article>
           </div>
           <p class="pricing-note">Every plan includes the same software, exchanges and updates. The only difference is how you pay.</p>
@@ -246,7 +252,7 @@
           </div>
           <article class="pricing-card hosting-addon" data-plan="hosting" id="hosting">
             <div class="hosting-copy">
-              <span class="pill accent"><i></i> Optional monthly add-on</span>
+              <span class="pill accent"><i></i> Optional managed hosting</span>
               <h4>Rent a VPS with Wick Hunter preinstalled</h4>
               <p>We set up your private server and email your login when it is ready. Just connect your exchange accounts and choose your bot settings.</p>
               <div class="hosting-specs" aria-label="Managed hosting server specification">
@@ -256,12 +262,12 @@
             </div>
             <div class="hosting-price">
               <div class="hosting-price-label" data-hosting-price>Check availability in customer dashboard</div>
-              <p class="price-caption">billed separately from your software licence · cancel anytime</p>
+              <p class="price-caption">$20 monthly, or $240 yearly with the annual software bundle</p>
               <div class="pricing-actions"><a class="btn block" href="/customer#hosting" data-hosting-cta>View hosting availability</a></div>
             </div>
           </article>
           <div class="pricing-footer"><a class="btn quiet" href="/billing">Manage billing</a></div>
-          <p class="fine">Software and managed hosting are billed separately. Subscriptions run to the end of each paid period; cancelling stops future charges and nothing is cut off early. Lifetime is a one-time software payment for one installation.</p>
+          <p class="fine">Monthly and Yearly bundles renew as one software + hosting charge. Lifetime remains a one-time software payment; its optional hosting renews separately each month. Cancelling stops future renewals and paid service continues through the current period.</p>
         </div>
       </div>
     </section>
@@ -273,9 +279,9 @@
           <article class="faq-item open"><button class="faq-q" aria-expanded="true">What is Wick Hunter Unleashed?<i>+</i></button><div class="faq-a"><p>Wick Hunter Unleashed is private trading automation software built and licensed by Wick Hunter Software LLC. It runs on one private server that you host or we provision, and connects to your own account at a supported exchange.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">How do I buy Unleashed, and how fast do I get access?<i>+</i></button><div class="faq-a"><p>Checkout is a standard card payment through Stripe. Within minutes you'll receive an email with your personal install page — a private link that walks you through installing on your own server.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">What is the difference between the plans?<i>+</i></button><div class="faq-a"><p>Same software and updates on every plan. Monthly and yearly renew automatically and can be cancelled from the billing portal at any time. Lifetime is a single payment for one installation and never renews.</p></div></article>
-          <article class="faq-item"><button class="faq-q" aria-expanded="false">Can Wick Hunter host my instance for me?<i>+</i></button><div class="faq-a"><p>Yes. Managed hosting is a separate monthly subscription in addition to your software licence and supports up to five connected exchange accounts on one private instance. The current VPS specification, regions, backup coverage, price, and availability appear in the hosting card above and are confirmed again in the customer dashboard before checkout. We install Unleashed and email your dashboard address when it is ready. You add restricted exchange API keys inside the dashboard.</p></div></article>
+          <article class="faq-item"><button class="faq-q" aria-expanded="false">Can Wick Hunter host my instance for me?<i>+</i></button><div class="faq-a"><p>Yes. Managed hosting supports up to five connected exchange accounts on one private instance. Add it to Monthly for one $119 monthly renewal or to Yearly for one $939 annual renewal. With Lifetime, the $999 software purchase stays one-time and you confirm a separate $20 monthly hosting subscription next. We install Unleashed and email your dashboard address when it is ready.</p></div></article>
          <article class="faq-item"><button class="faq-q" aria-expanded="false">What happens to my lifetime licence if the company closes?<i>+</i></button><div class="faq-a"><p>Lifetime licence holders receive the complete source code, so they can keep running and maintaining the software themselves. Subscriptions simply stop being charged.</p></div></article>
-          <article class="faq-item"><button class="faq-q" aria-expanded="false">Can I cancel?<i>+</i></button><div class="faq-a"><p>Yes, any time from the billing portal. Software and managed hosting are separate subscriptions, so cancel each one separately. Cancelling stops future charges and paid service continues to the end of its current period. Lifetime is a one-time software payment, so there's nothing to cancel.</p></div></article>
+          <article class="faq-item"><button class="faq-q" aria-expanded="false">Can I cancel?<i>+</i></button><div class="faq-a"><p>Yes, any time from the billing portal. Cancelling a Monthly or Yearly bundle stops its next combined software + hosting renewal. Lifetime software does not renew; its optional monthly hosting can be cancelled separately. Paid service continues through the current period.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">How do I reinstall on a new server?<i>+</i></button><div class="faq-a"><p>Open your personal install page again. It issues a fresh one-time install command you can run on the new machine — your licence isn't tied to a specific server.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">What happens if my software subscription lapses?<i>+</i></button><div class="faq-a"><p>The bot enters exit-only mode: it keeps closing and protecting existing positions but won't open anything new until the software subscription is renewed.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">Does Wick Hunter hold customer funds?<i>+</i></button><div class="faq-a"><p>No. Wick Hunter Software LLC never has custody of your assets. Everything trades through your own account at your chosen exchange.</p></div></article>
@@ -322,6 +328,6 @@
     </div>
   </footer>
 
-  <script src="/assets/site.js?v=20260914b" defer></script>
+  <script src="/assets/site.js?v=20260914c" defer></script>
 </body>
 </html>

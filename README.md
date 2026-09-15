@@ -21,9 +21,9 @@ look like one thing.
   (`#bots`), the five exchanges (`#exchanges`), the install guide
   (`#install`), the three software licence plans plus optional managed hosting
   (`#pricing`), and the Unleashed FAQ (`#faq`). The three software plan cards
-  link to Stripe checkout (`/buy?plan=...`). Managed hosting is a separate
-  monthly subscription that requires an active software licence and is
-  purchased from the authenticated Hub customer dashboard.
+  link to Stripe checkout (`/buy?plan=...`). Managed hosting can be bundled
+  into Monthly and Yearly checkout, or added as a separate monthly
+  subscription to a Lifetime licence.
 
 ## Deploy on Netlify
 
@@ -54,17 +54,39 @@ sets security headers and long-lived caching for `/assets/*`.
    `_redirects` sends `/buy` to the Hub and passes the `?plan=` query
    through untouched, so the Hub is what maps `plan=` to the right Stripe
    price.
-2. **Managed hosting.** Hosting is billed separately from the software
-   licence. The site reads the current plan, regions, backup coverage, price,
+2. **Managed hosting.** Hosting can be bundled with Monthly or Yearly, or added
+   separately to Lifetime. The site reads the current plan, regions, backup coverage, price,
    and availability from the Hub's public `/api/hosting/options` response so
    the Hub configuration remains the source of truth. The Hub also owns
    eligibility, one-instance enforcement, checkout, provisioning, and
-   customer email. Do not route hosting through `/buy?plan=...`; the Hub
-   starts hosting checkout from its authenticated customer dashboard after
-   confirming an active software licence.
+   customer email. Each licence card has its own availability-gated hosting
+   checkbox. Monthly shows one $119 monthly software + hosting renewal; Yearly
+   shows one $939 annual renewal ($699 software + $240 hosting); Lifetime keeps
+   its $999 one-time software price and leads to a separately confirmed $20
+   monthly hosting subscription.
+
+   Checked Monthly and Yearly cards POST `{plan, checkoutAttemptId}` to
+   `/api/hosting/bundle-checkout`. The browser persists one random UUID for the
+   current plan/attempt so an ambiguous response can be retried idempotently,
+   validates the returned amount/interval and an HTTPS `checkout.stripe.com`
+   URL, then navigates. The button remains disabled only while the request is
+   pending and a 15-second deadline restores retry on a hung request. The
+   checkboxes stay disabled until `/api/hosting/options` reports a final price,
+   purchasability, `maximumConnectedAccounts`, and `bundleEnabled:true`;
+   Lifetime's separate path needs the final hosting price and purchasability
+   but not the bundle flag.
+
 3. **The Hub redirect targets**, if the Hub ever moves off the bare IP
    `45.76.105.174` onto its own domain — update the two lines in
    `_redirects`.
+
+## Focused checkout verification
+
+Run `node --test tests/hosting-checkout-option.test.mjs`. The jsdom suite drives
+all three card selections, exact $119/month and $939/year bundle totals,
+Lifetime's separate $20/month follow-up, idempotent retry, plan changes,
+request timeout recovery, response price/interval checks, Stripe URL validation,
+and unavailable-option states without making a network request.
 
 ## Legal pages are drafts
 
@@ -86,6 +108,7 @@ privacy/index.html    Privacy Policy (draft)
 refunds/index.html    Refund policy (draft)
 404.html              Static 404 fallback
 assets/               Brand SVGs/PNGs + shared site.css / site.js
+tests/                Browser-level checkout behavior verification
 _headers              Security headers + caching
 _redirects            /buy, /billing, and /customer → the Hub
 netlify.toml          publish = "."
