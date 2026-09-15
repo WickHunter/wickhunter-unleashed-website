@@ -19,10 +19,11 @@ look like one thing.
 - **`/unleashed/` (`unleashed/index.html`)** is the flagship product's own
   page: the dashboard mockup, feature tiles, the five bot modules
   (`#bots`), the five exchanges (`#exchanges`), the install guide
-  (`#install`), the three pricing plans (`#pricing`), and the Unleashed FAQ
-  (`#faq`). Only the three plan cards inside `#pricing` link to Stripe
-  checkout (`/buy?plan=...`) — every other Buy control on the site is a link
-  into this page's pricing anchor, not a checkout link.
+  (`#install`), the three software licence plans plus optional managed hosting
+  (`#pricing`), and the Unleashed FAQ (`#faq`). The three software plan cards
+  link to Stripe checkout (`/buy?plan=...`). Managed hosting is a separate
+  monthly subscription that requires an active software licence and is
+  purchased from the authenticated Hub customer dashboard.
 
 ## Deploy on Netlify
 
@@ -31,13 +32,13 @@ look like one thing.
 3. Build command: none (`netlify.toml` already sets `publish = "."`).
 4. Point the custom domain (`wickhunterunleashed.com`) at the Netlify site.
 
-`_redirects` sends `/buy` and `/billing` to the Hub (the source of truth for
-checkout and billing-portal links); `_headers` sets security headers and
-long-lived caching for `/assets/*`.
+`_redirects` sends `/buy`, `/billing`, and `/customer` to the Hub (the source
+of truth for checkout, billing, and managed-hosting eligibility); `_headers`
+sets security headers and long-lived caching for `/assets/*`.
 
-## Two things to edit before/at launch
+## Pricing and Hub integration
 
-1. **The price.** There are three plans — Monthly, Yearly, Lifetime — each
+1. **Software licence prices.** There are three plans — Monthly, Yearly, Lifetime — each
    its own card in the `#pricing` block in `unleashed/index.html`. Prices are
    fixed text baked directly into that markup — no body attribute, no JS
    fill (a `data-hub` fetch on page load overwrites the number with the
@@ -53,7 +54,15 @@ long-lived caching for `/assets/*`.
    `_redirects` sends `/buy` to the Hub and passes the `?plan=` query
    through untouched, so the Hub is what maps `plan=` to the right Stripe
    price.
-2. **The Hub redirect targets**, if the Hub ever moves off the bare IP
+2. **Managed hosting.** Hosting is billed separately from the software
+   licence. The site reads the current plan, regions, backup coverage, price,
+   and availability from the Hub's public `/api/hosting/options` response so
+   the Hub configuration remains the source of truth. The Hub also owns
+   eligibility, one-instance enforcement, checkout, provisioning, and
+   customer email. Do not route hosting through `/buy?plan=...`; the Hub
+   starts hosting checkout from its authenticated customer dashboard after
+   confirming an active software licence.
+3. **The Hub redirect targets**, if the Hub ever moves off the bare IP
    `45.76.105.174` onto its own domain — update the two lines in
    `_redirects`.
 
@@ -78,7 +87,7 @@ refunds/index.html    Refund policy (draft)
 404.html              Static 404 fallback
 assets/               Brand SVGs/PNGs + shared site.css / site.js
 _headers              Security headers + caching
-_redirects            /buy and /billing → the Hub
+_redirects            /buy, /billing, and /customer → the Hub
 netlify.toml          publish = "."
 robots.txt            Crawling rules
 sitemap.xml           /, /unleashed/, /terms/, /privacy/, /refunds/
