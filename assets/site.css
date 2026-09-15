@@ -416,3 +416,12 @@ footer{border-top:1px solid var(--line-soft); background:var(--ground); padding:
 .exchange-card h3 a:hover{color:var(--link)}
 .exchange-cta{display:inline-block;margin-top:12px;font-size:13px;font-weight:650;color:var(--link);text-decoration:none}
 .exchange-cta:hover{color:var(--link-hover, var(--link));text-decoration:underline}
+
+/* Make the ready-to-use VPS option visible beside the licence decision. */
+.hosting-choice{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 20px;margin-bottom:20px;border:1px solid var(--accent-line);border-radius:var(--r-sm);background:var(--accent-dim)}
+.hosting-choice strong{font-size:16px;color:var(--ink)}
+.hosting-choice p{margin:5px 0 9px;color:var(--muted);font-size:13px;line-height:1.5}
+.hosting-choice-price{font-size:14px;font-weight:700;color:var(--accent)}
+.hosting-choice-note{font-size:12px;color:var(--muted)}
+.hosting-choice .btn{flex-shrink:0}
+@media(max-width:650px){.hosting-choice{align-items:stretch;flex-direction:column}.hosting-choice .btn{width:100%}}
