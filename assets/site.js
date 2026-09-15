@@ -53,6 +53,60 @@
         });
       })
       .catch(function () {});
+
+    // Managed hosting has its own eligibility-gated checkout. The public
+    // options endpoint keeps the advertised plan and price aligned with the
+    // Hub without sending visitors directly into a generic checkout route.
+    fetch(hub.replace(/\/+$/, '') + '/api/hosting/options', { mode: 'cors' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.ok !== true) return;
+
+        if (data.purchasable !== true || data.priceIsProposed === true) {
+          document.querySelectorAll('[data-hosting-price]').forEach(function (node) {
+            node.textContent = 'Not available for purchase yet';
+          });
+          document.querySelectorAll('[data-hosting-badge]').forEach(function (node) {
+            node.lastChild.textContent = ' Managed hosting · coming soon';
+          });
+          document.querySelectorAll('[data-hosting-cta]').forEach(function (node) {
+            node.textContent = 'View hosting availability';
+          });
+          return;
+        }
+
+        var regions = Array.isArray(data.regions)
+          ? data.regions.map(function (region) { return region && region.label; }).filter(Boolean).join(' · ')
+          : '';
+
+        if (typeof data.planLabel === 'string' && data.planLabel) {
+          document.querySelectorAll('[data-hosting-plan]').forEach(function (node) {
+            node.textContent = data.planLabel;
+          });
+        }
+        if (regions) {
+          document.querySelectorAll('[data-hosting-regions]').forEach(function (node) {
+            node.textContent = regions;
+          });
+        }
+        if (typeof data.managedBackupsIncluded === 'boolean') {
+          document.querySelectorAll('[data-hosting-backups]').forEach(function (node) {
+            node.textContent = data.managedBackupsIncluded ? 'Managed backups included' : 'Backups not included';
+          });
+        }
+        if (typeof data.monthlyPriceLabel === 'string' && data.monthlyPriceLabel) {
+          document.querySelectorAll('[data-hosting-price]').forEach(function (node) {
+            node.textContent = data.monthlyPriceLabel;
+          });
+          document.querySelectorAll('[data-hosting-badge]').forEach(function (node) {
+            node.lastChild.textContent = ' Hosting add-on · ' + data.monthlyPriceLabel;
+          });
+        }
+        document.querySelectorAll('[data-hosting-cta]').forEach(function (node) {
+          node.textContent = 'Open customer dashboard';
+        });
+      })
+      .catch(function () {});
   }
 
   // FAQ accordion

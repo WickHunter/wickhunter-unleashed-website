@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Wick Hunter Software LLC — Trading Software &amp; Development Services</title>
-  <meta name="description" content="Wick Hunter Software LLC sells Wick Hunter Unleashed, self-hosted non-custodial trading automation software from $99/month, plus development consulting, white-label builds, custom TradingView indicators, and integration services." />
+  <meta name="description" content="Wick Hunter Software LLC sells Wick Hunter Unleashed, non-custodial trading automation software from $99/month, with optional managed hosting, plus custom development services." />
   <meta name="theme-color" content="#0a0c12" />
   <meta property="og:title" content="Wick Hunter Software LLC" />
   <meta property="og:description" content="Trading software and custom development. Wick Hunter Unleashed plus consulting, white-label, indicator, and integration services." />
@@ -14,7 +14,7 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/assets/site.css?v=20260905d" />
+  <link rel="stylesheet" href="/assets/site.css?v=20260914a" />
 </head>
 <body data-hub="https://45.76.105.174/hub" id="top">
   <header class="header">
@@ -35,6 +35,7 @@
       <nav class="navlinks" aria-label="Primary navigation">
         <a href="/#products">Products</a>
         <a href="/unleashed/">Unleashed</a>
+        <a href="/unleashed/#hosting">Hosting</a>
         <a href="/#services">Services</a>
         <a href="/#contact">Contact</a>
       </nav>
@@ -47,6 +48,7 @@
     <nav class="mobile-menu" id="mobileMenu" aria-label="Mobile navigation">
       <a href="/#products">Products</a>
       <a href="/unleashed/">Unleashed</a>
+      <a href="/unleashed/#hosting">Hosting</a>
       <a href="/#services">Services</a>
       <a href="/#contact">Contact</a>
       <a href="/unleashed/#pricing">Buy Unleashed</a>
@@ -58,14 +60,14 @@
       <div class="container">
         <span class="eyebrow">Wick Hunter Software LLC</span>
         <h1>Trading software and custom development.</h1>
-        <p class="hero-copy">We build Wick Hunter Unleashed, self-hosted non-custodial trading automation software, and take on development services for teams that need something custom.</p>
+        <p class="hero-copy">We build Wick Hunter Unleashed, non-custodial trading automation software you can run on your own server or on a private VPS we provision for you.</p>
         <div class="hero-actions">
           <a class="btn lg" href="/unleashed/#pricing">See Unleashed plans <span aria-hidden="true">→</span></a>
           <a class="btn quiet lg" href="/#contact">Talk to us</a>
         </div>
         <div class="trust-row" aria-label="Company positioning">
           <span class="trust-chip"><i></i> Software company</span>
-          <span class="trust-chip"><i></i> Self-hosted</span>
+          <span class="trust-chip"><i></i> Self-hosted or managed</span>
           <span class="trust-chip"><i></i> Non-custodial</span>
           <span class="trust-chip"><i></i> No withdrawal access</span>
         </div>
@@ -76,17 +78,28 @@
       <div class="container">
         <div class="section-head" id="services">
           <div><span class="eyebrow">What we offer</span><h2>Everything we offer</h2></div>
-          <div><p>One software product, plus development services available by request. Every card below covers what it is, what's included, and how to start.</p></div>
+          <div><p>One software product, an optional managed hosting subscription, and development services available by request.</p></div>
         </div>
         <div class="products-grid">
           <article class="card product-card">
             <span class="pill live"><i></i> Software · from $99/month</span>
             <h3>Wick Hunter Unleashed</h3>
-            <p>Self-hosted trading automation you run on your own server. Five bot modules share one deal engine for entries, DCA, take-profit, stop-loss, and hedging.</p>
+            <p>Non-custodial trading automation for a private server. Five bot modules share one deal engine for entries, DCA, take-profit, stop-loss, and hedging.</p>
             <ul class="product-list"><li>Five bot modules</li><li>Five exchanges</li><li>Signed in-app updates</li></ul>
             <div class="product-actions">
               <a class="btn" href="/unleashed/#pricing">See plans</a>
               <a class="btn quiet" href="/unleashed/">Learn more</a>
+            </div>
+          </article>
+
+          <article class="card product-card">
+            <span class="pill live" data-hosting-badge><i></i> Managed hosting · check availability</span>
+            <h3>Managed Unleashed Hosting</h3>
+            <p>We provision a private VPS sized for Unleashed, install the software, and email your dashboard address when it is ready.</p>
+            <ul class="product-list"><li data-hosting-plan>Private VPS</li><li data-hosting-regions>Japan region</li><li>Up to 5 connected exchange accounts</li></ul>
+            <div class="product-actions">
+              <a class="btn" href="/unleashed/#hosting">See hosting</a>
+              <a class="btn quiet" href="/customer#hosting" data-hosting-cta>View hosting availability</a>
             </div>
           </article>
 
@@ -158,11 +171,11 @@
         <div class="center-head">
           <span class="eyebrow">Non-custodial architecture</span>
           <h2>How it works with your money.</h2>
-          <p>Three separate parties, three separate roles — software, installation, and exchange account never overlap.</p>
+          <p>Your software instance and exchange account keep separate roles whether you self-host or use our managed hosting add-on.</p>
         </div>
         <div class="arch-grid">
           <article class="arch-card"><span class="arch-number">01</span><h3>Wick Hunter Software LLC</h3><p>Develops, licenses, updates, and supports the software — it never touches your trading deposits.</p></article>
-          <article class="arch-card"><span class="arch-number">02</span><h3>Your private installation</h3><p>Runs on your own server, with your exchange credentials and automation settings stored locally.</p></article>
+          <article class="arch-card"><span class="arch-number">02</span><h3>Your private installation</h3><p>Runs on your server or a managed private VPS. Exchange credentials and automation settings stay on that instance.</p></article>
           <article class="arch-card"><span class="arch-number">03</span><h3>Your exchange account</h3><p>Holds your assets and positions at a third-party venue, with withdrawal permission disabled for the software's API keys.</p></article>
         </div>
         <div class="boundary-bar"><strong>Designed without custody, deposits, or managed accounts.</strong><span>You remain responsible for exchange eligibility, configuration, and trading decisions.</span></div>
@@ -215,7 +228,7 @@
           </a>
           <p>Wick Hunter Software LLC develops non-custodial trading automation software and provides technical consulting, white-label software, custom indicators, and integration development.</p>
         </div>
-        <div class="footer-col"><h4>Products</h4><a href="/unleashed/">Unleashed</a><a href="/unleashed/#pricing">Plans</a><a href="/#services">Services</a></div>
+        <div class="footer-col"><h4>Products</h4><a href="/unleashed/">Unleashed</a><a href="/unleashed/#pricing">Plans</a><a href="/unleashed/#hosting">Hosting</a><a href="/#services">Services</a></div>
         <div class="footer-col"><h4>Legal</h4><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a><a href="/refunds/">Refund policy</a><a href="/billing">Manage billing</a></div>
         <div class="footer-col"><h4>Contact</h4><a href="mailto:admin@wickhunterunleashed.com">admin@wickhunterunleashed.com</a><a href="/unleashed/#faq">FAQ</a></div>
       </div>
@@ -223,6 +236,6 @@
     </div>
   </footer>
 
-  <script src="/assets/site.js?v=20260905d" defer></script>
+  <script src="/assets/site.js?v=20260914a" defer></script>
 </body>
 </html>
