@@ -63,6 +63,9 @@
         if (!data || data.ok !== true) return;
 
         if (data.purchasable !== true || data.priceIsProposed !== false) {
+          document.querySelectorAll('[data-hosting-short-price]').forEach(function (node) {
+            node.textContent = 'Hosting availability being confirmed';
+          });
           document.querySelectorAll('[data-hosting-price]').forEach(function (node) {
             node.textContent = 'Not available for purchase yet';
           });
@@ -95,6 +98,9 @@
           });
         }
         if (typeof data.monthlyPriceLabel === 'string' && data.monthlyPriceLabel) {
+          document.querySelectorAll('[data-hosting-short-price]').forEach(function (node) {
+            node.textContent = '+' + data.monthlyPriceLabel + '/month';
+          });
           document.querySelectorAll('[data-hosting-price]').forEach(function (node) {
             node.textContent = data.monthlyPriceLabel;
           });
