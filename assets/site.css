@@ -425,3 +425,15 @@ footer{border-top:1px solid var(--line-soft); background:var(--ground); padding:
 .hosting-choice-note{font-size:12px;color:var(--muted)}
 .hosting-choice .btn{flex-shrink:0}
 @media(max-width:650px){.hosting-choice{align-items:stretch;flex-direction:column}.hosting-choice .btn{width:100%}}
+
+.hosting-select{display:flex;align-items:center;gap:12px;cursor:pointer;font-size:17px;font-weight:700;color:var(--ink)}
+.hosting-select input{width:21px;height:21px;margin:0;flex-shrink:0;accent-color:var(--accent)}
+.hosting-select:has(input:disabled){opacity:.65;cursor:default}
+.hosting-select-card{align-items:flex-start;margin:4px 0 6px;font-size:12.5px;line-height:1.4}
+.hosting-select-card input{width:18px;height:18px;margin-top:1px}
+.hosting-card-note{min-height:34px;margin:0 0 16px;color:var(--dim);font-size:10.5px;line-height:1.45}
+.btn[aria-disabled="true"]{opacity:.55;cursor:wait}
+.hosting-next{margin:24px 0;padding:22px;border:1px solid var(--accent-line);border-radius:var(--r-sm);background:var(--accent-dim)}
+.hosting-next[hidden]{display:none}
+.hosting-next h2{font-size:22px;margin:0 0 12px}
+.hosting-next .btn{margin:6px 6px 0 0}

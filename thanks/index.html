@@ -9,9 +9,9 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/assets/site.css?v=20260914b" />
+  <link rel="stylesheet" href="/assets/site.css?v=20260914c" />
 </head>
-<body class="status-page">
+<body class="status-page" data-hub="https://45.76.105.174/hub">
   <header class="simple-header">
     <div class="container">
       <a class="brand" href="/" aria-label="Wick Hunter Unleashed home">
@@ -36,7 +36,17 @@
       <span class="eyebrow">Payment received</span>
       <h1>Thanks — check your inbox for next steps.</h1>
       <p>If you purchased a software licence, we'll send your personal install link. If you added managed hosting, we'll first confirm that provisioning has started, then send your dashboard address and sign-in steps when your private server is ready.</p>
-      <p>Managed hosting and the software licence are separate subscriptions. Your managed server requires an active Unleashed licence.</p>
+      <section class="hosting-next" data-hosting-combined-next hidden>
+        <h2>Your rented VPS is included</h2>
+        <p>Your software and hosting payment were submitted together. We will email your dashboard address and sign-in steps after the private server is ready.</p>
+      </section>
+      <section class="hosting-next" data-hosting-separate-next hidden>
+        <h2>Next: confirm your rented VPS</h2>
+        <p>You selected hosting with your Lifetime licence. The VPS subscription has not been purchased yet. Sign in using the email from your licence purchase to confirm <strong data-hosting-confirm-price>$20/month</strong>.</p>
+        <a class="btn" href="/customer#hosting" data-hosting-finish>Continue to VPS checkout</a>
+        <button class="btn quiet" type="button" data-hosting-skip>I'll set up my own server</button>
+      </section>
+      <p>Monthly and Yearly hosting bundles renew with the software plan. Lifetime hosting is a separate monthly subscription. Your managed server requires an active Unleashed licence.</p>
       <p>It can take a minute to arrive. If you don't see it, check your spam or promotions folder.</p>
       <a class="mailto" href="mailto:admin@wickhunterunleashed.com?subject=Didn%27t%20receive%20my%20purchase%20email">Didn't get a purchase email? Email admin@wickhunterunleashed.com</a>
       <div><a class="btn" href="/">Return to the homepage</a></div>
@@ -49,5 +59,6 @@
       <nav><a href="/terms/">Terms</a> &nbsp;·&nbsp; <a href="/privacy/">Privacy</a> &nbsp;·&nbsp; <a href="/refunds/">Refund policy</a></nav>
     </div>
   </footer>
+  <script src="/assets/site.js?v=20260914c"></script>
 </body>
 </html>
