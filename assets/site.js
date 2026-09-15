@@ -62,7 +62,7 @@
       .then(function (data) {
         if (!data || data.ok !== true) return;
 
-        if (data.purchasable !== true || data.priceIsProposed === true) {
+        if (data.purchasable !== true || data.priceIsProposed !== false) {
           document.querySelectorAll('[data-hosting-price]').forEach(function (node) {
             node.textContent = 'Not available for purchase yet';
           });
