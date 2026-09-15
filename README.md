@@ -18,7 +18,7 @@ look like one thing.
   links to `/unleashed/#pricing`, never straight to checkout.
 - **`/unleashed/` (`unleashed/index.html`)** is the flagship product's own
   page: the dashboard mockup, feature tiles, the five bot modules
-  (`#bots`), the five exchanges (`#exchanges`), the install guide
+  (`#bots`), the six exchanges (`#exchanges`), the install guide
   (`#install`), the three software licence plans plus optional managed hosting
   (`#pricing`), and the Unleashed FAQ (`#faq`). The three software plan cards
   link to Stripe checkout (`/buy?plan=...`). Managed hosting can be bundled
