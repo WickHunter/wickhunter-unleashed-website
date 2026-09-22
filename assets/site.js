@@ -345,3 +345,6 @@
     });
   });
 })();
+
+// Support lives on a same-origin page; credentials never enter site JavaScript.
+(()=>{const a=document.createElement('a');a.href='/support/';a.className='support-launch';a.textContent='Chat with support';document.body.appendChild(a);})();
