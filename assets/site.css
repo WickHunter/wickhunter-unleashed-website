@@ -437,3 +437,5 @@ footer{border-top:1px solid var(--line-soft); background:var(--ground); padding:
 .hosting-next[hidden]{display:none}
 .hosting-next h2{font-size:22px;margin:0 0 12px}
 .hosting-next .btn{margin:6px 6px 0 0}
+
+.support-launch{position:fixed;right:20px;bottom:20px;z-index:50;background:#6f68f2;color:white;padding:13px 19px;border-radius:999px;font:600 14px system-ui;text-decoration:none;box-shadow:0 4px 24px #0006;min-height:44px}.support-launch:hover{background:#827bf8}
