@@ -458,8 +458,9 @@ footer{border-top:1px solid var(--line-soft); background:var(--ground); padding:
 .support-launch[hidden],.support-window[hidden],.support-window [hidden]{display:none!important}
 .support-window{position:fixed;z-index:100;right:max(20px,env(safe-area-inset-right));bottom:var(--support-bottom,20px);width:min(430px,calc(100vw - 32px));height:var(--support-height,min(680px,calc(100dvh - 32px)));display:flex;flex-direction:column;overflow:hidden;border:1px solid #343d52;border-radius:20px;background:#0a0c12;box-shadow:0 16px 64px #0009;color:#e9ecf5}
 .support-window-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;padding:16px 18px;background:#171b2b;border-bottom:1px solid #252d40}
-.support-window-header strong{display:block;font-size:18px;line-height:1.4}.support-window-header span{display:block;color:#aeb8cc;font-size:12px}
-.support-window-close{display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid #404964;background:transparent;color:#fff;border-radius:12px;font:28px/1 var(--sans);cursor:pointer}
+.support-window-header strong{display:block;font-size:18px;line-height:1.4}
+.support-window-close{display:grid;place-items:center;flex-shrink:0;width:44px;height:44px;padding:0;border:1px solid #404964;background:transparent;color:#fff;border-radius:12px;cursor:pointer}
+.support-window-close svg{display:block}
 .support-window-close:hover{background:#272e44}.support-window-close:focus-visible{outline:3px solid #d0caff;outline-offset:2px}
 .support-window iframe{width:100%;flex:1;min-height:0;border:0;background:#0a0c12}
 .support-window-loading{margin:24px;color:#b7c1d5;font-size:14px;line-height:1.6}.support-window-loading .btn{margin-top:12px}

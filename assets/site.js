@@ -541,7 +541,7 @@
   panel.hidden = true;
   panel.setAttribute('role', 'dialog');
   panel.setAttribute('aria-labelledby', 'website-support-title');
-  panel.innerHTML = '<header class="support-window-header"><div><strong id="website-support-title">Support</strong><span>Wick Hunter</span></div><button type="button" class="support-window-close" aria-label="Close support">×</button></header><p class="support-window-loading" role="status">Loading your conversation…</p><iframe title="Wick Hunter support conversation" hidden></iframe>';
+  panel.innerHTML = '<header class="support-window-header"><strong id="website-support-title">Wick Hunter Support</strong><button type="button" class="support-window-close" aria-label="Close support"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></header><p class="support-window-loading" role="status">Loading your conversation…</p><iframe title="Wick Hunter Support conversation" hidden></iframe>';
   const close = panel.querySelector('.support-window-close');
   const frame = panel.querySelector('iframe');
   const status = panel.querySelector('[role="status"]');
