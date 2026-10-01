@@ -118,7 +118,10 @@ sitemap.xml           /, /unleashed/, /terms/, /privacy/, /refunds/
 
 ## Support chat
 
-The floating support button and footer links open the Hub’s full support page
-in a new tab. The site stays open at the visitor’s current position. Existing
-`/support/` bookmarks redirect to the same chat; no nested chat iframe is used.
-The support button keeps white text in visited, hover, and keyboard-focus states.
+The floating support button and footer links open an on-page chat panel, with
+close/Escape controls and a layout that fits mobile screens. The conversation
+stays loaded when the panel closes. `/support/*` proxies the Hub on the website
+origin so Secure, SameSite session cookies work without third-party cookies.
+The Hub still validates the website origin and support-action header. No
+credentials are stored in site JavaScript. Existing `/support/` bookmarks open
+the full chat. The support button retains readable text in every link state.

@@ -346,14 +346,72 @@
   });
 })();
 
-// Open the full chat in its own tab, preserving the visitor's place on the site.
+// Same-origin support keeps the conversation on the page and avoids third-party cookies.
 (() => {
-  const link = document.createElement('a');
-  link.href = 'https://hub.wickhunterunleashed.com/support/';
-  link.target = '_blank';
-  link.rel = 'noopener';
-  link.className = 'support-launch';
-  link.setAttribute('aria-label', 'Chat with support (opens in a new tab)');
-  link.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><span>Chat with support</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>';
-  document.body.appendChild(link);
+  const launcher = document.createElement('button');
+  launcher.type = 'button';
+  launcher.className = 'support-launch';
+  launcher.setAttribute('aria-controls', 'website-support');
+  launcher.setAttribute('aria-expanded', 'false');
+  launcher.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><span>Chat with support</span>';
+  const panel = document.createElement('section');
+  panel.id = 'website-support';
+  panel.className = 'support-window';
+  panel.hidden = true;
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-labelledby', 'website-support-title');
+  panel.innerHTML = '<header class="support-window-header"><div><strong id="website-support-title">Support</strong><span>Wick Hunter</span></div><button type="button" class="support-window-close" aria-label="Close support">×</button></header><p class="support-window-loading" role="status">Loading your conversation…</p><iframe title="Wick Hunter support conversation" hidden></iframe>';
+  const close = panel.querySelector('.support-window-close');
+  const frame = panel.querySelector('iframe');
+  const status = panel.querySelector('[role="status"]');
+  let opener = launcher;
+  function sizePanel() {
+    const viewport = window.visualViewport;
+    const height = viewport ? viewport.height : window.innerHeight;
+    const keyboard = viewport ? Math.max(0, window.innerHeight - height - viewport.offsetTop) : 0;
+    panel.style.setProperty('--support-height', Math.min(680, height - 32) + 'px');
+    panel.style.setProperty('--support-bottom', Math.max(16, keyboard + 16) + 'px');
+  }
+  function hide() {
+    panel.hidden = true;
+    launcher.hidden = false;
+    launcher.setAttribute('aria-expanded', 'false');
+    if (opener && opener.isConnected) opener.focus();
+  }
+  function escape(event) { if (event.key === 'Escape' && !panel.hidden) { event.preventDefault(); hide(); } }
+  function show(event) {
+    if (event) event.preventDefault();
+    opener = event && event.currentTarget || launcher;
+    panel.hidden = false;
+    launcher.hidden = true;
+    launcher.setAttribute('aria-expanded', 'true');
+    sizePanel();
+    if (!frame.hasAttribute('src')) frame.src = '/support/';
+    close.focus();
+  }
+  frame.addEventListener('load', () => {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc || !doc.getElementById('messages')) throw new Error('Support unavailable');
+      const style = doc.createElement('style');
+      style.textContent = 'body{padding:14px;gap:12px;max-width:none}body>header{display:none}';
+      doc.head.appendChild(style);
+      doc.addEventListener('keydown', escape);
+      frame.hidden = false;
+      status.hidden = true;
+    } catch {
+      status.textContent = 'Support is temporarily unavailable. ';
+      const retry = document.createElement('button');
+      retry.type = 'button'; retry.textContent = 'Try again'; retry.className = 'btn';
+      retry.addEventListener('click', () => { status.textContent = 'Loading your conversation…'; frame.src = '/support/'; });
+      status.appendChild(retry);
+    }
+  });
+  close.addEventListener('click', hide);
+  launcher.addEventListener('click', show);
+  document.querySelectorAll('a[data-open-support]').forEach(link => link.addEventListener('click', show));
+  document.addEventListener('keydown', escape);
+  window.addEventListener('resize', sizePanel);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', sizePanel);
+  document.body.append(panel, launcher);
 })();
