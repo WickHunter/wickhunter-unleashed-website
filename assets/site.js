@@ -60,6 +60,23 @@
   var hostingMaximumAccounts = 0;
   var bundleCheckoutEnabled = false;
   var bundleAttemptKey = 'wh.hosting-bundle-attempt.v1';
+  var launchAttemptKey = 'wh.launch-checkout-attempt.v1';
+  var launchAttemptMemory = {};
+  var launchOffer = null;
+  var launchPrices = {};
+  var cryptoPlans = {};
+  var checkoutMode = 'unknown';
+  var incomingReferral = new URLSearchParams(window.location.search).get('ref');
+  if (!incomingReferral || incomingReferral.length > 128) incomingReferral = null;
+  function withReferral(href) {
+    return incomingReferral ? href + '&ref=' + encodeURIComponent(incomingReferral) : href;
+  }
+  function launchActive() {
+    return !!(launchOffer && Date.now() < launchOffer.redeemUntilMs);
+  }
+  function launchFreeCardPeriod() {
+    return launchActive() && Date.now() < launchOffer.firstPaymentAtMs;
+  }
   function money(cents) {
     return cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
   }
@@ -74,10 +91,41 @@
     var link = card.querySelector('[data-software-buy]');
     var status = card.querySelector('[data-hosting-card-status]');
     if (!(baseCents >= 0) || !price || !caption || !link) return;
-    var total = baseCents;
+    var discounted = launchActive() && (!selected || plan === 'lifetime') ? launchPrices[plan] : null;
+    var softwareCents = discounted && discounted.amountCents === baseCents ? discounted.discountedAmountCents : baseCents;
+    var total = selected && plan !== 'lifetime' ? baseCents : softwareCents;
     if (selected && plan === 'monthly') total += hostingMonthlyCents;
     if (selected && plan === 'yearly') total += hostingMonthlyCents * 12;
     price.textContent = money(total);
+    var oldPrice = card.querySelector('[data-launch-old-price]');
+    if (oldPrice) {
+      oldPrice.hidden = softwareCents === baseCents;
+      oldPrice.textContent = softwareCents === baseCents ? '' : '$' + money(baseCents);
+    }
+    var terms = card.querySelector('[data-launch-terms]');
+    if (terms) {
+      terms.hidden = softwareCents === baseCents;
+      if (!terms.hidden) {
+        if (plan === 'lifetime') terms.textContent = '$' + money(softwareCents) + ' one-time payment today. Lifetime software access.';
+        else terms.textContent = launchFreeCardPeriod()
+          ? 'Card required. $0 today; first $' + money(softwareCents) + (plan === 'monthly' ? ' monthly' : ' yearly') + ' charge on Oct 15, 2026 at 12:00 a.m. ET. The 25% software discount continues on renewals while active.'
+          : '$' + money(softwareCents) + ' charged today; 25% off software renewals while active.';
+      }
+    }
+    var cryptoLink = card.querySelector('[data-crypto-buy]');
+    if (cryptoLink) {
+      cryptoLink.hidden = !(cryptoPlans[plan] && !selected && (!launchActive() || discounted));
+      if (!cryptoLink.hidden) cryptoLink.textContent = 'Pay $' + money(softwareCents) + ' with crypto';
+      var cryptoTerms = card.querySelector('[data-crypto-terms]');
+      if (cryptoTerms) {
+        cryptoTerms.hidden = cryptoLink.hidden;
+        if (!cryptoTerms.hidden) cryptoTerms.textContent = plan === 'yearly'
+          ? (Date.now() < (launchOffer && launchOffer.firstPaymentAtMs) && launchActive()
+            ? 'Crypto is paid now for access through Oct 15, 2027. No automatic renewal.'
+            : 'Crypto is paid now for one year of access. No automatic renewal.')
+          : 'Crypto is paid now for Lifetime software access. No automatic renewal.';
+      }
+    }
     if (plan === 'monthly') caption.textContent = selected ? 'software + VPS · one monthly renewal' : 'software · renews monthly';
     if (plan === 'yearly') caption.textContent = selected ? 'software + VPS · one annual renewal' : 'software · renews annually';
     if (plan === 'lifetime') caption.textContent = selected ? 'software once · VPS renews separately monthly' : 'software · one payment';
@@ -88,18 +136,48 @@
       if (plan === 'yearly') status.textContent = selected
         ? 'One $' + money(total) + ' annual software + hosting renewal.'
         : 'Add hosting for $' + money(hostingMonthlyCents * 12) + ' per year.';
-      if (plan === 'lifetime') status.textContent = '$' + money(baseCents)
+      if (plan === 'lifetime') status.textContent = '$' + money(softwareCents)
         + ' software today; confirm the separate $' + money(hostingMonthlyCents) + ' monthly hosting subscription next.';
     }
     link.textContent = selected ? (plan === 'lifetime' ? 'Buy Lifetime, then VPS' : 'Buy ' + (plan === 'monthly' ? 'Monthly' : 'Yearly') + ' + VPS')
       : 'Buy ' + plan.charAt(0).toUpperCase() + plan.slice(1);
-    link.setAttribute('href', link.dataset.baseHref);
-    var routeReady = !selected || plan === 'lifetime' || bundleCheckoutEnabled;
+    link.setAttribute('href', withReferral(link.dataset.baseHref));
+    var routeReady = checkoutMode === 'live' && (!selected || plan === 'lifetime' || bundleCheckoutEnabled);
     link.setAttribute('aria-disabled', String(!routeReady));
     link.classList.toggle('disabled', !routeReady);
+    if (!routeReady && checkoutMode !== 'live' && status && link.dataset.pending !== 'true') status.textContent = checkoutMode === 'test'
+      ? 'Checkout is unavailable while billing is in test mode.'
+      : checkoutMode === 'unknown' ? 'Checking checkout availability…' : 'Checkout availability could not be confirmed. Try again later.';
   }
   function renderPlanCards() {
     document.querySelectorAll('.pricing-card[data-base-price-cents]').forEach(renderPlanCard);
+    var banner = document.querySelector('[data-launch-offer]');
+    if (banner) {
+      banner.hidden = !launchActive();
+      if (!banner.hidden) {
+        var freeText = banner.querySelector('[data-launch-free-copy]');
+        if (freeText) freeText.textContent = launchFreeCardPeriod()
+          ? 'Card subscriptions require a card but cost $0 until Oct 15, 2026 at 12:00 a.m. ET; the first discounted charge is then.'
+          : 'Card subscriptions start billing at the discounted price today.';
+        var cryptoText = banner.querySelector('[data-launch-crypto-copy]');
+        if (cryptoText) cryptoText.hidden = !Object.values(cryptoPlans).some(Boolean);
+      }
+    }
+  }
+  function launchCheckoutAttemptId(plan, payment, referral) {
+    var key = plan + ':' + payment + ':' + (referral || '');
+    var attempts = {};
+    try {
+      attempts = JSON.parse(localStorage.getItem(launchAttemptKey) || '{}') || {};
+    } catch (_) {}
+    var prior = attempts[key] || launchAttemptMemory[key];
+    if (prior && typeof prior.id === 'string' && /^[0-9a-f-]{36}$/i.test(prior.id)
+      && typeof prior.at === 'number' && Date.now() - prior.at >= 0 && Date.now() - prior.at < 23 * 3600_000) return prior.id;
+    var id = crypto.randomUUID();
+    launchAttemptMemory[key] = { id: id, at: Date.now() };
+    attempts[key] = launchAttemptMemory[key];
+    try { localStorage.setItem(launchAttemptKey, JSON.stringify(attempts)); } catch (_) {}
+    return id;
   }
   function checkoutAttemptId(plan) {
     try {
@@ -130,7 +208,7 @@
     var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
     try {
       var response = await fetch(url, Object.assign({}, init, { signal: controller.signal }));
-      return { ok: response.ok, data: response.ok ? await response.json() : null };
+      return { ok: response.ok, data: await response.json() };
     } finally {
       clearTimeout(timer);
     }
@@ -175,11 +253,49 @@
       if (status) status.textContent = 'Checkout could not be opened. Try again; you will not be charged twice.';
     }
   }
+  async function startLaunchCheckout(card, link, payment) {
+    if (link.dataset.pending === 'true') return;
+    var plan = card.dataset.plan;
+    var status = card.querySelector('[data-hosting-card-status]');
+    var attemptId;
+    try { attemptId = launchCheckoutAttemptId(plan, payment, incomingReferral); }
+    catch (_) { if (status) status.textContent = 'Checkout could not be started in this browser. Refresh and try again.'; return; }
+    link.dataset.pending = 'true';
+    link.setAttribute('aria-disabled', 'true');
+    link.classList.add('disabled');
+    if (status) status.textContent = 'Opening secure checkout…';
+    try {
+      var result = await fetchJsonWithDeadline('/api/billing/checkout', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ plan: plan, payment: payment, attemptId: attemptId,
+          ...(incomingReferral ? { referral: incomingReferral } : {}) })
+      }, 15_000);
+      if (!result.ok && incomingReferral && result.data?.error === 'Referral discount is not active') {
+        // The Hub's /buy route has this same explicit fallback. A confirmed
+        // referral rejection permits a distinct no-referral checkout; an
+        // uncertain network result must keep its original retry identity.
+        result = await fetchJsonWithDeadline('/api/billing/checkout', {
+          method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ plan: plan, payment: payment,
+            attemptId: launchCheckoutAttemptId(plan, payment, null) })
+        }, 15_000);
+      }
+      var checkoutUrl = result.ok && result.data && result.data.ok === true ? safeStripeCheckoutUrl(result.data.url) : null;
+      if (!checkoutUrl) throw new Error('Checkout did not return a Stripe URL');
+      navigateTo(checkoutUrl);
+    } catch (_) {
+      delete link.dataset.pending;
+      link.setAttribute('aria-disabled', 'false');
+      link.classList.remove('disabled');
+      if (status) status.textContent = 'Checkout could not be opened. Try again with the same checkout attempt.';
+    }
+  }
   if (hostingCheckboxes.length) {
+    renderPlanCards();
     hostingCheckboxes.forEach(function (checkbox) {
       checkbox.addEventListener('change', function () {
         if (!checkbox.checked) clearCheckoutAttempt();
-        renderPlanCard(checkbox.closest('[data-plan]'));
+        renderPlanCards();
       });
     });
     document.querySelectorAll('[data-software-buy]').forEach(function (link) {
@@ -192,7 +308,20 @@
         if (selected && card && /^(monthly|yearly)$/.test(card.dataset.plan)) {
           event.preventDefault();
           startBundleCheckout(card, link);
+        } else if (card && launchActive() && launchPrices[card.dataset.plan]) {
+          event.preventDefault();
+          startLaunchCheckout(card, link, 'card');
         }
+      });
+    });
+    document.querySelectorAll('[data-crypto-buy]').forEach(function (link) {
+      link.setAttribute('href', withReferral(link.getAttribute('href')));
+      link.addEventListener('click', function (event) {
+        var card = link.closest('[data-plan]');
+        event.preventDefault();
+        if (!card || link.hidden || !cryptoPlans[card.dataset.plan] || link.getAttribute('aria-disabled') === 'true') return;
+        rememberHosting(false);
+        startLaunchCheckout(card, link, 'crypto');
       });
     });
   }
@@ -216,15 +345,33 @@
     fetch(hub.replace(/\/+$/, '') + '/api/billing/plans', { mode: 'cors' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
-        if (!data || !Array.isArray(data.plans)) return;
+        if (!data || data.ok !== true || !Array.isArray(data.plans)) { checkoutMode = 'unavailable'; renderPlanCards(); return; }
+        checkoutMode = data.mode === 'live' ? 'live' : data.mode === 'test' ? 'test' : 'unavailable';
+        var offer = data.launch;
+        if (checkoutMode === 'live' && offer && offer.active === true && offer.code === 'UNLEASHED25'
+          && offer.discountPercent === 25 && Number.isFinite(offer.firstPaymentAtMs)
+          && Number.isFinite(offer.redeemUntilMs) && offer.firstPaymentAtMs < offer.redeemUntilMs
+          && Date.now() < offer.redeemUntilMs) {
+          launchOffer = offer;
+        }
         data.plans.forEach(function (plan) {
           var card = document.querySelector('.pricing-card[data-plan="' + plan.key + '"]');
           if (!card || typeof plan.amountCents !== 'number') return;
           card.dataset.basePriceCents = String(plan.amountCents);
-          renderPlanCard(card);
+          if (checkoutMode === 'live' && offer && offer.cryptoEnabled === true && plan.cryptoAvailable === true
+            && (plan.key === 'yearly' || plan.key === 'lifetime')) cryptoPlans[plan.key] = true;
+          if (launchOffer && Number.isInteger(plan.discountedAmountCents)
+            && plan.discountedAmountCents === Math.round(plan.amountCents * .75)) {
+            launchPrices[plan.key] = { amountCents: plan.amountCents, discountedAmountCents: plan.discountedAmountCents };
+          }
         });
+        renderPlanCards();
+        if (launchOffer) {
+          if (Date.now() < launchOffer.firstPaymentAtMs) setTimeout(renderPlanCards, Math.max(1, launchOffer.firstPaymentAtMs - Date.now() + 1));
+          setTimeout(renderPlanCards, Math.max(1, Math.min(launchOffer.redeemUntilMs - Date.now() + 1, 2_147_483_647)));
+        }
       })
-      .catch(function () {});
+      .catch(function () { checkoutMode = 'unavailable'; renderPlanCards(); });
 
     // The public options endpoint keeps each selection disabled until the Hub
     // confirms both the advertised plan and its atomic checkout route.

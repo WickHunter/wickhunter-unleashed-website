@@ -14,7 +14,7 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/assets/site.css?v=20260930-chat" />
+  <link rel="stylesheet" href="/assets/site.css?v=20260930-launch" />
 </head>
 <body data-hub="https://hub.wickhunterunleashed.com" id="top">
   <div class="announcement">
@@ -210,6 +210,12 @@
       <div class="container">
         <div class="pricing-block">
           <div class="pricing-head"><span class="pill live"><i></i> Available now</span><h3>Choose your software licence</h3></div>
+          <div class="launch-offer" data-launch-offer hidden aria-live="polite">
+            <strong>Launch offer · 25% off software</strong>
+            <p>Sign up through Oct 15, 2026 at 11:59 p.m. ET. Code <b>UNLEASHED25</b> is applied automatically. Monthly and Yearly keep the discount on every renewal while the subscription remains active; hosting is priced separately.</p>
+            <p data-launch-free-copy></p>
+            <p data-launch-crypto-copy hidden>Crypto Yearly and Lifetime are paid now. Crypto Yearly bought before Oct 15 provides access through Oct 15, 2027; neither crypto option renews automatically.</p>
+          </div>
           <div class="hosting-choice">
             <div><strong>Want it ready to use?</strong><p>Add the rented VPS inside the plan you want below. Monthly and Yearly show one combined renewal; Lifetime keeps hosting as a separate monthly subscription.</p><span class="hosting-choice-note" data-hosting-selection-status aria-live="polite">Checking hosting availability…</span></div>
             <a class="btn quiet" href="#hosting">VPS details <span aria-hidden="true">↓</span></a>
@@ -217,8 +223,9 @@
           <div class="pricing-cards">
             <article class="pricing-card" data-plan="monthly" data-base-price-cents="9900">
               <h4>Monthly</h4>
-              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>99</span><span class="period">/mo</span></div>
+              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>99</span><span class="period">/mo</span><del class="launch-old-price" data-launch-old-price hidden></del></div>
               <p class="price-caption" data-plan-caption>software · renews monthly</p>
+              <p class="launch-terms" data-launch-terms hidden></p>
               <label class="hosting-select hosting-select-card"><input type="checkbox" data-hosting-select disabled aria-describedby="monthlyHostingHelp"><span>Add rented VPS · +<span data-hosting-monthly-price>$20/month</span></span></label>
               <p class="hosting-card-note" id="monthlyHostingHelp" data-hosting-card-status>One $119 monthly software + hosting renewal when selected.</p>
               <div class="pricing-actions"><a class="btn block" data-software-buy data-base-href="/buy?plan=monthly" href="/buy?plan=monthly">Buy Monthly</a></div>
@@ -226,21 +233,23 @@
             <article class="pricing-card" data-plan="yearly" data-base-price-cents="69900">
               <span class="pill accent"><i></i> Annual billing</span>
               <h4>Yearly</h4>
-              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>699</span><span class="period">/yr</span></div>
+              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>699</span><span class="period">/yr</span><del class="launch-old-price" data-launch-old-price hidden></del></div>
               <p class="price-caption" data-plan-caption>software · renews annually</p>
+              <p class="launch-terms" data-launch-terms hidden></p>
               <label class="hosting-select hosting-select-card"><input type="checkbox" data-hosting-select disabled aria-describedby="yearlyHostingHelp"><span>Add rented VPS · +<span data-hosting-yearly-price>$240/year</span> (<span data-hosting-monthly-equiv>$20/month</span>)</span></label>
               <p class="hosting-card-note" id="yearlyHostingHelp" data-hosting-card-status>One $939 annual software + hosting renewal when selected.</p>
-              <div class="pricing-actions"><a class="btn block" data-software-buy data-base-href="/buy?plan=yearly" href="/buy?plan=yearly">Buy Yearly</a></div>
+              <div class="pricing-actions"><a class="btn block" data-software-buy data-base-href="/buy?plan=yearly" href="/buy?plan=yearly">Buy Yearly</a><a class="btn quiet block launch-crypto" data-crypto-buy href="/buy?plan=yearly&amp;payment=crypto" hidden>Pay with crypto</a><p class="launch-crypto-terms" data-crypto-terms hidden></p></div>
             </article>
             <article class="pricing-card best" data-plan="lifetime" data-base-price-cents="99900">
               <span class="pill accent"><i></i> Best value</span>
               <h4>Lifetime</h4>
-              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>999</span></div>
+              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>999</span><del class="launch-old-price" data-launch-old-price hidden></del></div>
               <p class="price-caption" data-plan-caption>software · one payment</p>
+              <p class="launch-terms" data-launch-terms hidden></p>
               <p class="guarantee"><b>Source-code guarantee.</b> If Wick Hunter Software ever shuts down, lifetime licence holders receive the full source code.</p>
               <label class="hosting-select hosting-select-card"><input type="checkbox" data-hosting-select disabled aria-describedby="lifetimeHostingHelp"><span>Add rented VPS · +<span data-hosting-monthly-price>$20/month</span></span></label>
               <p class="hosting-card-note" id="lifetimeHostingHelp" data-hosting-card-status>$999 software today; confirm the separate $20 monthly hosting subscription next.</p>
-              <div class="pricing-actions"><a class="btn block" data-software-buy data-base-href="/buy?plan=lifetime" href="/buy?plan=lifetime">Buy Lifetime</a></div>
+              <div class="pricing-actions"><a class="btn block" data-software-buy data-base-href="/buy?plan=lifetime" href="/buy?plan=lifetime">Buy Lifetime</a><a class="btn quiet block launch-crypto" data-crypto-buy href="/buy?plan=lifetime&amp;payment=crypto" hidden>Pay with crypto</a><p class="launch-crypto-terms" data-crypto-terms hidden></p></div>
             </article>
           </div>
           <p class="pricing-note">Every plan includes the same software, exchanges and updates. The only difference is how you pay.</p>
@@ -329,6 +338,6 @@
     </div>
   <p style="text-align:center"><a href="/tutorials/">Video tutorials</a> · <a href="/support/" data-open-support>Chat support</a></p></footer>
 
-  <script src="/assets/site.js?v=20260930-chat" defer></script>
+  <script src="/assets/site.js?v=20260930-launch" defer></script>
 </body>
 </html>

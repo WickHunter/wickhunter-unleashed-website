@@ -30,7 +30,7 @@ async function page(file, hostingResponse, { remembered = null, bundle = null } 
     if (String(url).includes("/api/hosting/bundle-checkout")) return bundle
       ? bundle(JSON.parse(init.body), init)
       : response(null, false);
-    return response({ ok: true, plans: [] });
+    return response({ ok: true, mode: 'live', plans: [] });
   };
   dom.window.eval(siteJs);
   await settle();

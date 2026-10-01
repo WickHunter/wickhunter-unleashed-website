@@ -204,6 +204,15 @@ h1{font-size:clamp(40px, 5.2vw, 62px); line-height:1.04; letter-spacing:-.03em; 
 .hosting-price-label{font-family:var(--mono); font-size:19px; font-weight:700; line-height:1.3; color:var(--ink); margin-bottom:6px}
 .pricing-footer{display:flex; justify-content:center; margin-top:20px}
 .fine{color:var(--dim); font-size:11px; margin-top:14px; text-align:center; line-height:1.5}
+.launch-offer{margin:-4px 0 20px;padding:17px 20px;border:1px solid var(--accent-line);border-radius:12px;background:var(--accent-dim)}
+.launch-offer strong{display:block;color:var(--accent);font-size:15px;margin-bottom:6px}
+.launch-offer p{color:var(--ink);font-size:12.5px;line-height:1.5;margin:0 0 5px}
+.launch-offer p:last-child{margin-bottom:0}
+.launch-terms{font-size:11.5px;line-height:1.45;color:var(--accent);margin:-14px 0 16px}
+.launch-old-price{font:500 14px var(--mono);color:var(--dim);margin-left:8px}
+.launch-crypto{margin-top:8px;text-align:center}
+.launch-crypto-terms{font-size:10.5px;line-height:1.4;color:var(--dim);margin:7px 0 0}
+.launch-offer[hidden],.launch-terms[hidden],.launch-old-price[hidden],.launch-crypto[hidden],.launch-crypto-terms[hidden],.launch-offer [hidden]{display:none!important}
 
 /* ---------- products (catalogue: software + services, one card system) ---------- */
 .products-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:12px}
