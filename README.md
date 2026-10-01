@@ -88,13 +88,9 @@ Lifetime's separate $20/month follow-up, idempotent retry, plan changes,
 request timeout recovery, response price/interval checks, Stripe URL validation,
 and unavailable-option states without making a network request.
 
-## Legal pages are drafts
+## Customer policies
 
-`terms/`, `privacy/`, and `refunds/` each start with an HTML comment —
-`<!-- DRAFT: have this reviewed before launch -->` — and end with a visible
-draft notice. Have them reviewed by counsel before accepting real payments.
-`terms/index.html` also has a governing-law placeholder (`State of [STATE],
-USA`) that needs a real jurisdiction filled in.
+`terms/`, `privacy/`, and `refunds/` contain the September 30, 2026 policies for Wick Hunter Software, LLC, a Delaware LLC. They include the business address, October 15 software launch offer, seven-day first-payment refund request window, one-time crypto purchases, and automatic technical token renewal for Lifetime access. Keep checkout disclosures and these policies aligned when commercial terms change.
 
 ## Structure
 
@@ -103,9 +99,9 @@ index.html            Home page — the product/service catalogue
 unleashed/index.html  Wick Hunter Unleashed product page (features, bots,
                        exchanges, install guide, pricing, FAQ)
 thanks/index.html     Stripe checkout success redirect target (noindex)
-terms/index.html      Terms of Service (draft)
-privacy/index.html    Privacy Policy (draft)
-refunds/index.html    Refund policy (draft)
+terms/index.html      Terms of Service
+privacy/index.html    Privacy Policy
+refunds/index.html    Refund policy
 404.html              Static 404 fallback
 assets/               Brand SVGs/PNGs + shared site.css / site.js
 tests/                Browser-level checkout behavior verification
