@@ -10,15 +10,34 @@ const goodOptions = {
   regions: [{ label: "Japan" }], managedBackupsIncluded: false,
   maximumConnectedAccounts: 5,
 };
+const launchBilling = {
+  ok: true, mode: "live",
+  launch: { active: true, code: "UNLEASHED25", discountPercent: 25,
+    firstPaymentAtMs: Date.parse("2026-10-15T04:00:00Z"), redeemUntilMs: Date.parse("2026-10-16T04:00:00Z"), cryptoEnabled: false },
+  plans: [
+    { key: "monthly", amountCents: 9900, discountedAmountCents: 7425 },
+    { key: "yearly", amountCents: 69900, discountedAmountCents: 52425 },
+    { key: "lifetime", amountCents: 99900, discountedAmountCents: 74925 },
+  ],
+};
 const response = (body, ok = true) => ({ ok, json: async () => body });
+const delayed = (value, delayMs) => delayMs ? new Promise((resolve) => setTimeout(() => resolve(value), delayMs)) : value;
 const settle = async () => {
   await new Promise((resolve) => setImmediate(resolve));
   await new Promise((resolve) => setImmediate(resolve));
 };
+async function waitFor(predicate, timeoutMs = 500) {
+  const start = Date.now();
+  while (!predicate()) {
+    if (Date.now() - start > timeoutMs) throw new Error("Timed out waiting for page state");
+    await new Promise((resolve) => setTimeout(resolve, 2));
+  }
+}
 
-async function page(file, hostingResponse, { remembered = null, bundle = null } = {}) {
+async function page(file, hostingResponse, { remembered = null, bundle = null, billing = null, billingDelayMs = 0, hostingDelayMs = 0 } = {}) {
   const html = readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
   const dom = new JSDOM(html, { url: `https://wickhunterunleashed.com/${file}`, runScripts: "outside-only" });
+  if (billing?.launch?.active) dom.window.Date.now = () => Date.parse("2026-10-01T12:00:00Z");
   const calls = [], navigations = [];
   let uuid = 0;
   Object.defineProperty(dom.window.crypto, "randomUUID", { value: () => `00000000-0000-4000-8000-${String(++uuid).padStart(12, "0")}` });
@@ -26,10 +45,12 @@ async function page(file, hostingResponse, { remembered = null, bundle = null } 
   dom.window.HTMLAnchorElement.prototype.click = function () { navigations.push(this.href); };
   dom.window.fetch = async (url, init = {}) => {
     calls.push({ url: String(url), init });
-    if (String(url).includes("/api/hosting/options")) return hostingResponse;
+    if (String(url).includes("/api/hosting/options")) return delayed(hostingResponse, hostingDelayMs);
+    if (String(url).includes("/api/billing/plans")) return delayed(response(billing || { ok: true, mode: 'live', plans: [] }), billingDelayMs);
     if (String(url).includes("/api/hosting/bundle-checkout")) return bundle
       ? bundle(JSON.parse(init.body), init)
       : response(null, false);
+    if (String(url).includes("/api/billing/checkout")) return response({ ok: true, url: "https://checkout.stripe.com/c/pay/launch-software" });
     return response({ ok: true, mode: 'live', plans: [] });
   };
   dom.window.eval(siteJs);
@@ -65,6 +86,70 @@ test("each licence card shows its exact selected hosting billing shape", async (
     assert.equal(lifetime.link.textContent, "Buy Lifetime, then VPS");
     assert.equal(lifetime.link.getAttribute("href"), "/buy?plan=lifetime");
   } finally { dom.window.close(); }
+});
+
+test("active launch offer checks out discounted software first when VPS is selected", async () => {
+  for (const [plan, expectedPrice] of [["monthly", "74.25"], ["yearly", "524.25"]]) {
+    for (const [billingDelayMs, hostingDelayMs] of [[0, 25], [25, 0]]) {
+      const seen = [];
+      const ctx = await page("unleashed/index.html", response(goodOptions), {
+        billing: launchBilling, billingDelayMs, hostingDelayMs,
+        bundle: (body) => { seen.push({ route: "bundle", body }); return response(null, false); },
+      });
+      try {
+        const card = ctx.dom.window.document.querySelector(`[data-plan="${plan}"]`);
+        await waitFor(() => !card.querySelector("[data-hosting-select]").disabled
+          && card.querySelector("[data-software-buy]").getAttribute("aria-disabled") === "false");
+        if (plan === "yearly") assert.match(card.querySelector("[data-hosting-card-status]").textContent,
+          /separately for \$20 per month/, "unselected Yearly also describes launch hosting as monthly");
+        const selected = choose(ctx.dom, plan);
+        await waitFor(() => selected.card.querySelector("[data-plan-price]").textContent === expectedPrice
+          && /separately from your customer dashboard/.test(selected.card.querySelector("[data-hosting-card-status]").textContent));
+      assert.equal(selected.card.querySelector("[data-plan-price]").textContent, expectedPrice,
+        "selected VPS must not remove the software launch discount or add hosting to software price");
+      assert.match(selected.card.querySelector("[data-plan-caption]").textContent, /VPS billed separately monthly/);
+      assert.match(selected.card.querySelector("[data-hosting-card-status]").textContent, /VPS: \$20\/month separately from your customer dashboard/);
+      assert.equal(selected.card.querySelector("[data-hosting-launch-copy]").hidden, false);
+      assert.equal(selected.link.textContent, plan === "monthly" ? "Buy Monthly" : "Buy Yearly");
+      selected.link.dispatchEvent(new ctx.dom.window.MouseEvent("click", { bubbles: true, cancelable: true }));
+      await settle();
+      assert.deepEqual(ctx.navigations, ["https://checkout.stripe.com/c/pay/launch-software"]);
+      assert.equal(seen.length, 0, "the atomic full-price software+VPS route must not run during the offer");
+      const request = ctx.calls.find((call) => call.url === "/api/billing/checkout");
+      assert.ok(request);
+      assert.equal(JSON.parse(request.init.body).plan, plan);
+      assert.equal(JSON.parse(request.init.body).payment, "card");
+
+      const remembered = JSON.parse(ctx.dom.window.localStorage.getItem("wh.hosting-choice.v1"));
+      assert.equal(remembered.launchSoftwareFirst, true);
+      const thanks = await page("thanks/index.html", response(goodOptions), { remembered, billing: launchBilling });
+      try {
+        await settle();
+        assert.equal(thanks.dom.window.document.querySelector("[data-hosting-launch-next]").hidden, false);
+        assert.equal(thanks.dom.window.document.querySelector("[data-hosting-combined-next]").hidden, true);
+        assert.equal(thanks.dom.window.document.querySelector("[data-hosting-launch-next] a").getAttribute("href"), "/customer#hostingCard");
+        assert.equal(thanks.dom.window.document.querySelector("[data-hosting-thanks-launch]").hidden, false);
+        } finally { thanks.dom.window.close(); }
+      } finally { ctx.dom.window.close(); }
+    }
+  }
+});
+
+test("active launch offer does not promise VPS availability when the hosting options endpoint refuses purchase", async () => {
+  const unavailable = { ...goodOptions, purchasable: false };
+  const ctx = await page("unleashed/index.html", response(unavailable), { billing: launchBilling });
+  try {
+    const card = ctx.dom.window.document.querySelector('[data-plan="yearly"]');
+    await waitFor(() => card.querySelector("[data-hosting-select]").disabled
+      && !ctx.dom.window.document.querySelector("[data-hosting-choice-launch]").hidden);
+    assert.match(ctx.dom.window.document.querySelector("[data-hosting-choice-launch]").textContent, /when available/);
+    assert.match(ctx.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /not available for purchase yet/);
+    assert.match(card.querySelector("[data-hosting-launch-copy]").textContent, /when available/);
+    card.querySelector("[data-software-buy]").dispatchEvent(new ctx.dom.window.MouseEvent("click", { bubbles: true, cancelable: true }));
+    await settle();
+    assert.deepEqual(ctx.navigations, ["https://checkout.stripe.com/c/pay/launch-software"]);
+    assert.equal(ctx.calls.some((call) => call.url.includes("/api/hosting/bundle-checkout")), false);
+  } finally { ctx.dom.window.close(); }
 });
 
 test("combined checkout posts the exact plan and reuses one browser attempt id after a retry", async () => {

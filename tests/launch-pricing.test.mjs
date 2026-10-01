@@ -145,8 +145,8 @@ test('only a confirmed inactive referral falls back to a separate no-referral ch
   } finally { ctx.dom.window.close(); }
 });
 
-test('combined hosting remains at its full bundle price with no launch free-period copy', async () => {
-  const ctx = await page();
+test('after the offer expires combined hosting uses the full bundle price without launch free-period copy', async () => {
+  const ctx = await page({ now: redeemUntil });
   try {
     for (const [plan, price] of [['monthly', '119'], ['yearly', '939']]) {
       const item = card(ctx.dom, plan);
@@ -191,4 +191,33 @@ test('launch checkout posts a stable attempt on retry, switches payment identity
     assert.deepEqual(seen.map(({ plan, payment }) => [plan, payment]),
       [['monthly', 'card'], ['monthly', 'card'], ['yearly', 'crypto'], ['yearly', 'crypto'], ['monthly', 'card']]);
   } finally { ctx.dom.window.close(); }
+});
+
+test('crypto remains available with separately billed VPS and preserves the hosting handoff', async () => {
+  for (const [plan, now] of [['yearly', prelaunch], ['lifetime', prelaunch], ['lifetime', redeemUntil]]) {
+    const seen = [];
+    const ctx = await page({ now, checkout: body => {
+      seen.push(body);
+      return response({ ok: true, url: 'https://checkout.stripe.com/c/pay/crypto-hosting' });
+    } });
+    try {
+      const item = card(ctx.dom, plan);
+      const checkbox = item.querySelector('[data-hosting-select]');
+      checkbox.checked = true;
+      checkbox.dispatchEvent(new ctx.dom.window.Event('change', { bubbles: true }));
+      const crypto = item.querySelector('[data-crypto-buy]');
+      assert.equal(crypto.hidden, false);
+      assert.match(item.querySelector('[data-crypto-terms]').textContent, /No automatic renewal/);
+      click(ctx.dom, crypto); await settle();
+      assert.equal(seen.length, 1);
+      assert.equal(seen[0].plan, plan);
+      assert.equal(seen[0].payment, 'crypto');
+      assert.deepEqual(ctx.navigations, ['https://checkout.stripe.com/c/pay/crypto-hosting']);
+      const choice = JSON.parse(ctx.dom.window.localStorage.getItem('wh.hosting-choice.v1'));
+      assert.equal(choice.selected, true);
+      assert.equal(choice.plan, plan);
+      assert.equal(choice.launchSoftwareFirst === true, plan === 'yearly');
+      assert.equal(ctx.calls.some(call => call.url.includes('bundle-checkout')), false);
+    } finally { ctx.dom.window.close(); }
+  }
 });
