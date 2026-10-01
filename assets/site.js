@@ -539,6 +539,9 @@
   frame.addEventListener('load', () => {
     try {
       const doc = frame.contentDocument;
+      // Appending an iframe loads about:blank before a conversation is opened.
+      // That initial load is not a failed support request.
+      if (!frame.hasAttribute('src') || doc?.URL === 'about:blank') return;
       if (!doc || !doc.getElementById('messages')) throw new Error('Support unavailable');
       const style = doc.createElement('style');
       style.textContent = 'body{padding:14px;gap:12px;max-width:none}body>header{display:none}';
@@ -546,6 +549,7 @@
       doc.addEventListener('keydown', escape);
       frame.hidden = false;
       status.hidden = true;
+      status.textContent = '';
     } catch {
       status.textContent = 'Support is temporarily unavailable. ';
       const retry = document.createElement('button');
