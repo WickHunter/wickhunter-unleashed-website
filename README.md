@@ -115,3 +115,10 @@ netlify.toml          publish = "."
 robots.txt            Crawling rules
 sitemap.xml           /, /unleashed/, /terms/, /privacy/, /refunds/
 ```
+
+## Support chat
+
+The floating support button and footer links open the Hub’s full support page
+in a new tab. The site stays open at the visitor’s current position. Existing
+`/support/` bookmarks redirect to the same chat; no nested chat iframe is used.
+The support button keeps white text in visited, hover, and keyboard-focus states.

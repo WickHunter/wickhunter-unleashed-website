@@ -346,5 +346,14 @@
   });
 })();
 
-// Support lives on a same-origin page; credentials never enter site JavaScript.
-(()=>{const a=document.createElement('a');a.href='/support/';a.className='support-launch';a.textContent='Chat with support';document.body.appendChild(a);})();
+// Open the full chat in its own tab, preserving the visitor's place on the site.
+(() => {
+  const link = document.createElement('a');
+  link.href = 'https://hub.wickhunterunleashed.com/support/';
+  link.target = '_blank';
+  link.rel = 'noopener';
+  link.className = 'support-launch';
+  link.setAttribute('aria-label', 'Chat with support (opens in a new tab)');
+  link.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><span>Chat with support</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg>';
+  document.body.appendChild(link);
+})();
