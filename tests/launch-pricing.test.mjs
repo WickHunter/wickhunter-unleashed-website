@@ -264,3 +264,22 @@ test('crypto remains available with separately billed VPS and preserves the host
     } finally { ctx.dom.window.close(); }
   }
 });
+
+test('starter bonus follows the verified offer and disappears at its deadline', async () => {
+  for (const home of [false, true]) {
+    for (const [now, billing, expectedVisible] of [
+      [Date.parse('2026-10-02T12:00:00Z'), plans(), true],
+      [redeemUntil, plans(), false],
+      [Date.parse('2026-10-02T12:00:00Z'), plans(false), false],
+      [Date.parse('2026-10-02T12:00:00Z'), null, false],
+    ]) {
+      const ctx = await page({ now, billing, home });
+      try {
+        const bonuses = [...ctx.dom.window.document.querySelectorAll('[data-starter-announcement]')];
+        assert(bonuses.length > 0, 'bonus has a verified availability hook');
+        assert(bonuses.every(node => node.hidden === !expectedVisible));
+        assert.doesNotMatch(ctx.dom.window.document.body.textContent, /WHVIP25|WHVIP40/);
+      } finally { ctx.dom.window.close(); }
+    }
+  }
+});

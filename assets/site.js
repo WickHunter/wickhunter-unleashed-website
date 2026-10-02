@@ -160,6 +160,7 @@
     document.querySelectorAll('.pricing-card[data-base-price-cents]').forEach(renderPlanCard);
     var activeOffer = launchActive();
     document.querySelectorAll('[data-free-announcement]').forEach(function (node) { node.hidden = !launchFreeCardPeriod(); });
+    document.querySelectorAll('[data-starter-announcement]').forEach(function (node) { node.hidden = !launchActive(); });
     document.querySelectorAll('[data-availability-announcement]').forEach(function (node) { node.hidden = launchFreeCardPeriod(); });
     document.querySelectorAll('[data-hosting-choice-standard], [data-hosting-billing-standard], [data-hosting-faq-standard]').forEach(function (node) { node.hidden = activeOffer; });
     document.querySelectorAll('[data-hosting-choice-launch], [data-hosting-billing-launch], [data-hosting-faq-launch]').forEach(function (node) { node.hidden = !activeOffer; });
@@ -523,6 +524,7 @@
   const launcher = document.createElement('button');
   launcher.type = 'button';
   launcher.className = 'support-launch';
+  launcher.setAttribute('aria-label', 'Chat with Wick Hunter Support');
   launcher.setAttribute('aria-controls', 'website-support');
   launcher.setAttribute('aria-expanded', 'false');
   launcher.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/></svg><span>Chat with support</span>';

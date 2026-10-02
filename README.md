@@ -1,7 +1,6 @@
 # Wick Hunter Software — marketing & checkout website
 
-Static marketing site for Wick Hunter Software LLC. No build step — every
-page is plain HTML, and `assets/site.css` / `assets/site.js` carry the shared
+Static marketing site for Wick Hunter Software LLC. Every page is plain HTML, and `assets/site.css` / `assets/site.js` carry the shared
 theme and behavior (mobile menu, FAQ accordion, exchange filter, Hub price
 feed).
 
@@ -9,27 +8,18 @@ The visual theme (colors, radii, cards, buttons, pills, chips) is copied
 verbatim from the Unleashed app itself, so the marketing site and the product
 look like one thing.
 
-## Two pages
+## Sales pages
 
-- **`/` (`index.html`)** is the catalogue: every product and service the
-  company sells, one card each (`#products`, which also serves as the
-  `#services` anchor), the non-custodial money-flow explainer, and contact.
-  Every "Buy Unleashed" control on this page — header, hero, product card —
-  links to `/unleashed/#pricing`, never straight to checkout.
-- **`/unleashed/` (`unleashed/index.html`)** is the flagship product's own
-  page: the dashboard mockup, feature tiles, the five bot modules
-  (`#bots`), the six exchanges (`#exchanges`), the install guide
-  (`#install`), the three software licence plans plus optional managed hosting
-  (`#pricing`), and the Unleashed FAQ (`#faq`). The three software plan cards
-  link to Stripe checkout (`/buy?plan=...`). Managed hosting can be bundled
-  into Monthly and Yearly checkout, or added as a separate monthly
-  subscription to a Lifetime licence.
+- `/` introduces Unleashed and Hedge Bots, using screenshots rendered from the shipped app with clearly labeled illustrative data. It keeps consulting services in the footer and directs the main action to plans.
+- `/unleashed/` explains Hedge Bots, the five bot modules, plan options, hosting, setup and exchange support. Existing Stripe checkout, referral, account and support integrations remain in `assets/site.js`.
+- The free software period and signup starter-pack panels use the Hub's verified live offer status. The free card period ends at the start of October 15; the starter signup deadline ends at the end of October 15 Eastern Time. Public pages show base prices and no private promotion code.
+- `assets/marketing.css` styles the homepage; `assets/product-marketing.css` styles the product page. Product image labels distinguish sample data from trading results. The community link uses the owner's Discord invite.
 
 ## Deploy on Netlify
 
 1. Connect this repository in Netlify.
-2. Publish directory: `.`
-3. Build command: none (`netlify.toml` already sets `publish = "."`).
+2. Publish directory: `dist`.
+3. Build command: `node scripts/build-site.mjs` (configured in `netlify.toml`). The build copies only public pages and assets; tests and internal repository files are excluded.
 4. Point the custom domain (`wickhunterunleashed.com`) at the Netlify site.
 
 `_redirects` sends `/buy`, `/billing`, and `/customer` to the Hub (the source
@@ -95,7 +85,7 @@ and unavailable-option states without making a network request.
 ## Structure
 
 ```
-index.html            Home page — the product/service catalogue
+index.html            Home page — Unleashed and Hedge Bot sales overview
 unleashed/index.html  Wick Hunter Unleashed product page (features, bots,
                        exchanges, install guide, pricing, FAQ)
 thanks/index.html     Stripe checkout success redirect target (noindex)
@@ -107,7 +97,7 @@ assets/               Brand SVGs/PNGs + shared site.css / site.js
 tests/                Browser-level checkout behavior verification
 _headers              Security headers + caching
 _redirects            /buy, /billing, and /customer → the Hub
-netlify.toml          publish = "."
+netlify.toml          public-only build into dist/
 robots.txt            Crawling rules
 sitemap.xml           /, /unleashed/, /terms/, /privacy/, /refunds/
 ```

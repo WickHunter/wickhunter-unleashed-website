@@ -1,0 +1,28 @@
+/* Product presentation; checkout and chat retain the shared site behavior. */
+.product-sales{--dim:#a2abc0;--muted:#adb6cc}
+.product-hero{padding:80px 0 68px;background:radial-gradient(ellipse at 50% 0,rgba(111,104,242,.14),transparent 55%)}
+.product-hero-copy{max-width:880px;margin:0 auto 48px;text-align:center}
+.product-hero-copy h1{font-size:clamp(40px,5vw,70px);line-height:1.08;letter-spacing:-.045em}
+.product-hero-copy h1 span{color:#ada7ff}
+.product-hero-copy .hero-copy{margin:22px auto 28px;max-width:660px;font-size:19px;line-height:1.65}
+.product-hero-copy .hero-actions{justify-content:center}
+.product-proof{display:flex;justify-content:center;gap:26px;flex-wrap:wrap;margin-top:25px;color:var(--muted);font-size:12px}
+.product-proof span+span:before{content:'•';margin-right:26px;color:#746bef}
+.product-screen{margin:0;background:#10131c;border:1px solid #30364a;border-radius:16px;overflow:hidden;box-shadow:0 24px 75px #0005}
+.product-screen img{width:100%;height:auto;display:block}
+.product-screen-bar{display:flex;justify-content:space-between;padding:13px 20px;color:#aeb7cc;font-size:11px;letter-spacing:.03em;border-bottom:1px solid #2a3043}
+.product-screen figcaption{padding:13px 20px;color:#a2abc0;font-size:11px;line-height:1.6;border-top:1px solid #22293a}
+.product-split{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;margin-bottom:40px}
+.product-split>div{min-width:0}
+.product-split h2{font-size:clamp(32px,3.8vw,47px);line-height:1.14;letter-spacing:-.035em;margin:18px 0 22px}
+.product-split p{color:var(--muted);font-size:16px;line-height:1.8}
+.product-steps article{display:flex;gap:20px;padding:23px 0;border-bottom:1px solid #262b3b}
+.product-steps article>span{font-family:var(--mono);color:#a69cff;font-size:12px;padding-top:5px}
+.product-steps h3{font-size:18px;margin-bottom:7px}.product-steps p{font-size:14px;margin:0}
+.product-sales .section-head{align-items:start}
+.product-sales .price-caption,.product-sales .fine,.product-sales .hosting-card-note{color:#a8b0c3}
+.product-sales .pricing-card h4{font-size:14px}.product-sales .pricing-card .price{font-size:43px}
+.product-sales .pricing-card{padding:25px}.product-sales .pricing-note{font-size:14px}
+.product-sales .btn{min-height:44px}.product-sales .bot-card p{font-size:14px}
+.product-sales .bot-card .tag{font-size:11px}
+@media(max-width:760px){.product-hero{padding:50px 0}.product-hero-copy{margin-bottom:30px}.product-hero-copy .hero-copy{font-size:16px}.product-split{grid-template-columns:1fr;gap:24px}.product-proof{gap:10px 16px}.product-proof span+span:before{display:none}.product-screen-bar{padding:11px 13px;font-size:10px;gap:10px}.product-screen figcaption{padding:12px 14px}.product-sales .section{padding:58px 0}.product-sales .pricing-block{padding:18px}.product-sales .product-screen-secondary{margin-top:28px}}
