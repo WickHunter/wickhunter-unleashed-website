@@ -64,7 +64,7 @@
   var launchAttemptKey = 'wh.launch-checkout-attempt.v1';
   var launchAttemptMemory = {};
   var launchOffer = null;
-  var launchPrices = {};
+  var launchPlans = {};
   var cryptoPlans = {};
   var checkoutMode = 'unknown';
   var incomingReferral = new URLSearchParams(window.location.search).get('ref');
@@ -86,38 +86,32 @@
     var plan = card.dataset.plan;
     var checkbox = card.querySelector('[data-hosting-select]');
     var selected = !!(checkbox && checkbox.checked);
-    var launchOfferSeparateChoice = launchActive() && /^(monthly|yearly)$/.test(plan) && !!launchPrices[plan];
+    var launchOfferSeparateChoice = launchActive() && /^(monthly|yearly)$/.test(plan) && !!launchPlans[plan];
     var baseCents = Number(card.dataset.basePriceCents);
     var price = card.querySelector('[data-plan-price]');
     var caption = card.querySelector('[data-plan-caption]');
     var link = card.querySelector('[data-software-buy]');
     var status = card.querySelector('[data-hosting-card-status]');
     if (!(baseCents >= 0) || !price || !caption || !link) return;
-    var launchSeparateVps = launchActive() && selected && /^(monthly|yearly)$/.test(plan) && !!launchPrices[plan];
-    var discounted = launchActive() && (!selected || plan === 'lifetime' || launchSeparateVps) ? launchPrices[plan] : null;
-    var softwareCents = discounted && discounted.amountCents === baseCents ? discounted.discountedAmountCents : baseCents;
-    var total = selected && plan !== 'lifetime' && !launchSeparateVps ? baseCents : softwareCents;
+    var launchSeparateVps = launchActive() && selected && /^(monthly|yearly)$/.test(plan) && !!launchPlans[plan];
+    var softwareCents = baseCents;
+    var total = baseCents;
     if (selected && !launchSeparateVps && plan === 'monthly') total += hostingMonthlyCents;
     if (selected && !launchSeparateVps && plan === 'yearly') total += hostingMonthlyCents * 12;
     price.textContent = money(total);
-    var oldPrice = card.querySelector('[data-launch-old-price]');
-    if (oldPrice) {
-      oldPrice.hidden = softwareCents === baseCents;
-      oldPrice.textContent = softwareCents === baseCents ? '' : '$' + money(baseCents);
-    }
     var terms = card.querySelector('[data-launch-terms]');
     if (terms) {
-      terms.hidden = softwareCents === baseCents;
+      terms.hidden = !launchActive() || !launchPlans[plan];
       if (!terms.hidden) {
-        if (plan === 'lifetime') terms.textContent = '$' + money(softwareCents) + ' one-time payment today. Lifetime software access.';
+        if (plan === 'lifetime') terms.textContent = 'One-time software payment today. Lifetime software access.';
         else terms.textContent = launchFreeCardPeriod()
-          ? 'Card required. $0 today; first $' + money(softwareCents) + (plan === 'monthly' ? ' monthly' : ' yearly') + ' charge on Oct 15, 2026 at 12:00 a.m. ET. The 25% software discount continues on renewals while active.'
-          : '$' + money(softwareCents) + ' charged today; 25% off software renewals while active.';
+          ? 'Card required. $0 today; first ' + (plan === 'monthly' ? 'monthly' : 'yearly') + ' charge on Oct 15, 2026 at 12:00 a.m. ET. Confirm your price at checkout.'
+          : 'First ' + (plan === 'monthly' ? 'monthly' : 'yearly') + ' charge today. Confirm your price at checkout.';
       }
     }
     var cryptoLink = card.querySelector('[data-crypto-buy]');
     if (cryptoLink) {
-      cryptoLink.hidden = !(cryptoPlans[plan] && (!selected || launchSeparateVps || plan === 'lifetime') && (!launchActive() || discounted));
+      cryptoLink.hidden = !(cryptoPlans[plan] && (!selected || launchSeparateVps || plan === 'lifetime'));
       if (!cryptoLink.hidden) cryptoLink.textContent = 'Pay $' + money(softwareCents) + ' with crypto';
       var cryptoTerms = card.querySelector('[data-crypto-terms]');
       if (cryptoTerms) {
@@ -134,7 +128,8 @@
     if (plan === 'lifetime') caption.textContent = selected ? 'software once · VPS renews separately monthly' : 'software · one payment';
     if (status && hostingMonthlyCents > 0 && link.dataset.pending !== 'true') {
       if (launchSeparateVps) status.textContent = 'Software: $' + money(softwareCents) + (plan === 'monthly' ? '/month' : '/year')
-        + ' with the launch offer. VPS: $' + money(hostingMonthlyCents) + '/month separately from your customer dashboard.';
+        + (launchFreeCardPeriod() ? ' after the free period. ' : ' starting today. ')
+        + 'VPS: $' + money(hostingMonthlyCents) + '/month separately from your customer dashboard.';
       else if (plan === 'monthly') status.textContent = selected
         ? 'One $' + money(total) + ' monthly software + hosting renewal.'
         : 'Add hosting for $' + money(hostingMonthlyCents) + ' per month.';
@@ -164,6 +159,8 @@
   function renderPlanCards() {
     document.querySelectorAll('.pricing-card[data-base-price-cents]').forEach(renderPlanCard);
     var activeOffer = launchActive();
+    document.querySelectorAll('[data-free-announcement]').forEach(function (node) { node.hidden = !launchFreeCardPeriod(); });
+    document.querySelectorAll('[data-availability-announcement]').forEach(function (node) { node.hidden = launchFreeCardPeriod(); });
     document.querySelectorAll('[data-hosting-choice-standard], [data-hosting-billing-standard], [data-hosting-faq-standard]').forEach(function (node) { node.hidden = activeOffer; });
     document.querySelectorAll('[data-hosting-choice-launch], [data-hosting-billing-launch], [data-hosting-faq-launch]').forEach(function (node) { node.hidden = !activeOffer; });
     var launchHandoff = activeOffer || !!(savedChoice && savedChoice.launchSoftwareFirst === true);
@@ -171,12 +168,10 @@
     document.querySelectorAll('[data-hosting-thanks-launch]').forEach(function (node) { node.hidden = !launchHandoff; });
     var banner = document.querySelector('[data-launch-offer]');
     if (banner) {
-      banner.hidden = !launchActive();
+      banner.hidden = !launchFreeCardPeriod();
       if (!banner.hidden) {
         var freeText = banner.querySelector('[data-launch-free-copy]');
-        if (freeText) freeText.textContent = launchFreeCardPeriod()
-          ? 'Card subscriptions require a card but cost $0 until Oct 15, 2026 at 12:00 a.m. ET; the first discounted charge is then.'
-          : 'Card subscriptions start billing at the discounted price today.';
+        if (freeText) freeText.textContent = 'Your first software charge uses the price confirmed at checkout.';
         var cryptoText = banner.querySelector('[data-launch-crypto-copy]');
         if (cryptoText) cryptoText.hidden = !Object.values(cryptoPlans).some(Boolean);
       }
@@ -322,7 +317,7 @@
         var checkbox = card && card.querySelector('[data-hosting-select]');
         if (link.getAttribute('aria-disabled') === 'true') { event.preventDefault(); return; }
         var selected = !!(checkbox && !checkbox.disabled && checkbox.checked);
-        var launchSoftwareFirst = selected && card && launchActive() && !!launchPrices[card.dataset.plan]
+        var launchSoftwareFirst = selected && card && launchActive() && !!launchPlans[card.dataset.plan]
           && /^(monthly|yearly)$/.test(card.dataset.plan);
         rememberHosting(selected, card && card.dataset.plan, launchSoftwareFirst);
         if (launchSoftwareFirst) {
@@ -331,7 +326,7 @@
         } else if (selected && card && /^(monthly|yearly)$/.test(card.dataset.plan)) {
           event.preventDefault();
           startBundleCheckout(card, link);
-        } else if (card && launchActive() && launchPrices[card.dataset.plan]) {
+        } else if (card && launchActive() && launchPlans[card.dataset.plan]) {
           event.preventDefault();
           startLaunchCheckout(card, link, 'card');
         }
@@ -378,8 +373,7 @@
         if (!data || data.ok !== true || !Array.isArray(data.plans)) { checkoutMode = 'unavailable'; renderPlanCards(); return; }
         checkoutMode = data.mode === 'live' ? 'live' : data.mode === 'test' ? 'test' : 'unavailable';
         var offer = data.launch;
-        if (checkoutMode === 'live' && offer && offer.active === true && offer.code === 'UNLEASHED25'
-          && offer.discountPercent === 25 && Number.isFinite(offer.firstPaymentAtMs)
+        if (checkoutMode === 'live' && offer && offer.active === true && Number.isFinite(offer.firstPaymentAtMs)
           && Number.isFinite(offer.redeemUntilMs) && offer.firstPaymentAtMs < offer.redeemUntilMs
           && Date.now() < offer.redeemUntilMs) {
           launchOffer = offer;
@@ -390,10 +384,7 @@
           card.dataset.basePriceCents = String(plan.amountCents);
           if (checkoutMode === 'live' && offer && offer.cryptoEnabled === true && plan.cryptoAvailable === true
             && (plan.key === 'yearly' || plan.key === 'lifetime')) cryptoPlans[plan.key] = true;
-          if (launchOffer && Number.isInteger(plan.discountedAmountCents)
-            && plan.discountedAmountCents === Math.round(plan.amountCents * .75)) {
-            launchPrices[plan.key] = { amountCents: plan.amountCents, discountedAmountCents: plan.discountedAmountCents };
-          }
+          if (launchOffer && /^(monthly|yearly|lifetime)$/.test(plan.key)) launchPlans[plan.key] = true;
         });
         renderPlanCards();
         if (launchOffer) {
@@ -468,7 +459,7 @@
         }
         document.querySelectorAll('[data-hosting-selection-status]').forEach(function (node) {
           node.textContent = launchActive()
-            ? 'Launch offer: buy discounted software first, then add VPS hosting separately from your customer dashboard.'
+            ? 'Buy software first, then add VPS hosting separately from your customer dashboard.'
             : bundleCheckoutEnabled
               ? 'Available · choose the matching billing option inside any licence card'
             : 'Lifetime hosting is available separately; combined Monthly and Yearly checkout is not available yet.';

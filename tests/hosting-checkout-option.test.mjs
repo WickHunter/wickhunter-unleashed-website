@@ -12,12 +12,12 @@ const goodOptions = {
 };
 const launchBilling = {
   ok: true, mode: "live",
-  launch: { active: true, code: "UNLEASHED25", discountPercent: 25,
+  launch: { active: true,
     firstPaymentAtMs: Date.parse("2026-10-15T04:00:00Z"), redeemUntilMs: Date.parse("2026-10-16T04:00:00Z"), cryptoEnabled: false },
   plans: [
-    { key: "monthly", amountCents: 9900, discountedAmountCents: 7425 },
-    { key: "yearly", amountCents: 69900, discountedAmountCents: 52425 },
-    { key: "lifetime", amountCents: 99900, discountedAmountCents: 74925 },
+    { key: "monthly", amountCents: 9900 },
+    { key: "yearly", amountCents: 69900 },
+    { key: "lifetime", amountCents: 99900 },
   ],
 };
 const response = (body, ok = true) => ({ ok, json: async () => body });
@@ -88,8 +88,8 @@ test("each licence card shows its exact selected hosting billing shape", async (
   } finally { dom.window.close(); }
 });
 
-test("active launch offer checks out discounted software first when VPS is selected", async () => {
-  for (const [plan, expectedPrice] of [["monthly", "74.25"], ["yearly", "524.25"]]) {
+test("active free period checks out software first at its public base price when VPS is selected", async () => {
+  for (const [plan, expectedPrice] of [["monthly", "99"], ["yearly", "699"]]) {
     for (const [billingDelayMs, hostingDelayMs] of [[0, 25], [25, 0]]) {
       const seen = [];
       const ctx = await page("unleashed/index.html", response(goodOptions), {
@@ -106,7 +106,7 @@ test("active launch offer checks out discounted software first when VPS is selec
         await waitFor(() => selected.card.querySelector("[data-plan-price]").textContent === expectedPrice
           && /separately from your customer dashboard/.test(selected.card.querySelector("[data-hosting-card-status]").textContent));
       assert.equal(selected.card.querySelector("[data-plan-price]").textContent, expectedPrice,
-        "selected VPS must not remove the software launch discount or add hosting to software price");
+        "selected VPS must not add hosting to the software price");
       assert.match(selected.card.querySelector("[data-plan-caption]").textContent, /VPS billed separately monthly/);
       assert.match(selected.card.querySelector("[data-hosting-card-status]").textContent, /VPS: \$20\/month separately from your customer dashboard/);
       assert.equal(selected.card.querySelector("[data-hosting-launch-copy]").hidden, false);

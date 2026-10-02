@@ -4,6 +4,7 @@ import test from 'node:test';
 import { JSDOM } from 'jsdom';
 
 const html = readFileSync(new URL('../unleashed/index.html', import.meta.url), 'utf8');
+const homeHtml = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const script = readFileSync(new URL('../assets/site.js', import.meta.url), 'utf8');
 const firstPayment = Date.parse('2026-10-15T00:00:00-04:00');
 const redeemUntil = Date.parse('2026-10-16T00:00:00-04:00');
@@ -13,20 +14,20 @@ const settle = async () => { await new Promise(resolve => setImmediate(resolve))
 const plans = (active = true, crypto = true) => ({
   ok: true,
   mode: 'live',
-  launch: { active, code: 'UNLEASHED25', discountPercent: 25, firstPaymentAtMs: firstPayment,
+  launch: { active, firstPaymentAtMs: firstPayment,
     redeemUntilMs: redeemUntil, cryptoEnabled: crypto },
   plans: [
-    { key: 'monthly', amountCents: 9900, discountedAmountCents: 7425, cryptoAvailable: false },
-    { key: 'yearly', amountCents: 69900, discountedAmountCents: 52425, cryptoAvailable: crypto },
-    { key: 'lifetime', amountCents: 99900, discountedAmountCents: 74925, cryptoAvailable: crypto },
+    { key: 'monthly', amountCents: 9900, cryptoAvailable: false },
+    { key: 'yearly', amountCents: 69900, cryptoAvailable: crypto },
+    { key: 'lifetime', amountCents: 99900, cryptoAvailable: crypto },
   ],
 });
 const hosting = { ok: true, purchasable: true, priceIsProposed: false, bundleEnabled: true,
   monthlyPriceLabel: '$20.00', planLabel: 'Private VPS', regions: [{ label: 'Japan' }],
   managedBackupsIncluded: false, maximumConnectedAccounts: 5 };
 
-async function page({ now = prelaunch, billing = plans(), checkout = () => response(null, false), referral = null } = {}) {
-  const dom = new JSDOM(html, { url: 'https://wickhunterunleashed.com/unleashed/' + (referral ? '?ref=' + encodeURIComponent(referral) : ''), runScripts: 'outside-only' });
+async function page({ now = prelaunch, billing = plans(), checkout = () => response(null, false), referral = null, home = false } = {}) {
+  const dom = new JSDOM(home ? homeHtml : html, { url: 'https://wickhunterunleashed.com/' + (home ? '' : 'unleashed/') + (referral ? '?ref=' + encodeURIComponent(referral) : ''), runScripts: 'outside-only' });
   const calls = [], navigations = [];
   let counter = 0;
   dom.window.Date.now = () => now;
@@ -47,31 +48,73 @@ async function page({ now = prelaunch, billing = plans(), checkout = () => respo
 const card = (dom, plan) => dom.window.document.querySelector(`[data-plan="${plan}"]`);
 const click = (dom, link) => link.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
 
-test('verified offer shows exact recurring and one-time amounts with a free card period', async () => {
+test('verified free period shows full public prices and distinguishes immediate payments', async () => {
   const ctx = await page();
   try {
     const { dom } = ctx;
     assert.equal(dom.window.document.querySelector('[data-launch-offer]').hidden, false);
-    assert.match(dom.window.document.querySelector('[data-launch-free-copy]').textContent, /\$0 until Oct 15/);
-    for (const [plan, price, old] of [['monthly', '74.25', '$99'], ['yearly', '524.25', '$699'], ['lifetime', '749.25', '$999']]) {
+    assert.equal(dom.window.document.querySelector('[data-free-announcement]').hidden, false);
+    assert.equal(dom.window.document.querySelector('[data-availability-announcement]').hidden, true);
+    assert.match(dom.window.document.querySelector('[data-launch-offer]').textContent, /\$0 until midnight at the start of October 15/);
+    assert.equal(dom.window.document.querySelector('[data-launch-free-copy]').textContent, 'Your first software charge uses the price confirmed at checkout.');
+    assert.match(dom.window.document.querySelector('[data-launch-offer]').textContent, /Start free until October 15/);
+    assert.doesNotMatch(dom.window.document.querySelector('[data-launch-offer]').textContent, /discount|promo code|25%/i);
+    for (const [plan, price] of [['monthly', '99'], ['yearly', '699'], ['lifetime', '999']]) {
       const item = card(dom, plan);
       assert.equal(item.querySelector('[data-plan-price]').textContent, price);
-      assert.equal(item.querySelector('[data-launch-old-price]').textContent, old);
+      assert.equal(item.querySelector('[data-launch-old-price]'), null);
       assert.equal(item.querySelector('[data-launch-terms]').hidden, false);
     }
     assert.match(card(dom, 'monthly').querySelector('[data-launch-terms]').textContent, /Card required. \$0 today/);
-    assert.match(card(dom, 'yearly').querySelector('[data-launch-terms]').textContent, /renewals while active/);
-    assert.match(card(dom, 'lifetime').querySelector('[data-launch-terms]').textContent, /one-time payment today/);
+    assert.match(card(dom, 'yearly').querySelector('[data-launch-terms]').textContent, /first yearly charge on Oct 15/);
+    assert.match(card(dom, 'lifetime').querySelector('[data-launch-terms]').textContent, /One-time software payment today/);
     assert.equal(card(dom, 'yearly').querySelector('[data-crypto-buy]').hidden, false);
     assert.equal(card(dom, 'lifetime').querySelector('[data-crypto-buy]').hidden, false);
   } finally { ctx.dom.window.close(); }
 });
 
+test('legacy discount fields do not change public prices or send an automatic code', async () => {
+  const billing = plans();
+  billing.launch.code = 'OLD-PUBLIC-CODE';
+  billing.launch.discountPercent = 40;
+  billing.plans.forEach(plan => { plan.discountedAmountCents = Math.round(plan.amountCents * .6); });
+  const seen = [];
+  const ctx = await page({ billing, checkout: body => {
+    seen.push(body);
+    return response({ ok: true, url: 'https://checkout.stripe.com/c/pay/base-price' });
+  } });
+  try {
+    assert.equal(card(ctx.dom, 'monthly').querySelector('[data-plan-price]').textContent, '99');
+    assert.equal(card(ctx.dom, 'yearly').querySelector('[data-plan-price]').textContent, '699');
+    assert.equal(card(ctx.dom, 'lifetime').querySelector('[data-plan-price]').textContent, '999');
+    click(ctx.dom, card(ctx.dom, 'monthly').querySelector('[data-software-buy]'));
+    await settle();
+    assert.equal(seen.length, 1);
+    assert.equal(seen[0].referral, undefined);
+    assert.deepEqual(ctx.navigations, ['https://checkout.stripe.com/c/pay/base-price']);
+  } finally { ctx.dom.window.close(); }
+});
+
+test('home-page free-period announcement appears only while the verified period is active', async () => {
+  const active = await page({ home: true });
+  try {
+    const announcement = active.dom.window.document.querySelector('[data-free-announcement]');
+    assert.equal(announcement.hidden, false);
+    assert.match(announcement.textContent, /Monthly and Yearly Unleashed software are free until October 15 with a card/);
+  } finally { active.dom.window.close(); }
+  const expired = await page({ home: true, now: firstPayment });
+  try {
+    assert.equal(expired.dom.window.document.querySelector('[data-free-announcement]').hidden, true);
+  } finally { expired.dom.window.close(); }
+});
+
 test('the card free period ends at midnight Oct 15 ET, and a stale offer ends at midnight Oct 16 ET', async () => {
   const ctx = await page({ now: firstPayment });
   try {
-    assert.match(card(ctx.dom, 'monthly').querySelector('[data-launch-terms]').textContent, /charged today/);
+    assert.match(card(ctx.dom, 'monthly').querySelector('[data-launch-terms]').textContent, /charge today/);
     assert.doesNotMatch(card(ctx.dom, 'monthly').querySelector('[data-launch-terms]').textContent, /\$0 today/);
+    assert.equal(ctx.dom.window.document.querySelector('[data-launch-offer]').hidden, true);
+    assert.equal(ctx.dom.window.document.querySelector('[data-free-announcement]').hidden, true);
     ctx.setNow(redeemUntil);
     const checkbox = card(ctx.dom, 'monthly').querySelector('[data-hosting-select]');
     checkbox.dispatchEvent(new ctx.dom.window.Event('change', { bubbles: true }));
@@ -92,13 +135,13 @@ test('an inactive offer uses full prices while separately confirmed crypto avail
   } finally { inactive.dom.window.close(); }
   const noCrypto = await page({ billing: plans(true, false) });
   try {
-    assert.equal(card(noCrypto.dom, 'yearly').querySelector('[data-plan-price]').textContent, '524.25');
+    assert.equal(card(noCrypto.dom, 'yearly').querySelector('[data-plan-price]').textContent, '699');
     assert.equal(card(noCrypto.dom, 'yearly').querySelector('[data-crypto-buy]').hidden, true);
     assert.equal(noCrypto.dom.window.document.querySelector('[data-launch-crypto-copy]').hidden, true);
   } finally { noCrypto.dom.window.close(); }
 });
 
-test('a Hub test-mode response never offers a public purchase or launch promotion', async () => {
+test('a Hub test-mode response never offers a public purchase or free-period claim', async () => {
   const ctx = await page({ billing: { ...plans(), mode: 'test' } });
   try {
     assert.equal(ctx.dom.window.document.querySelector('[data-launch-offer]').hidden, true);
@@ -117,7 +160,7 @@ test('a landing-page referral follows the card and crypto checkout paths without
   } });
   try {
     const yearly = card(ctx.dom, 'yearly');
-    assert.equal(yearly.querySelector('[data-plan-price]').textContent, '524.25');
+    assert.equal(yearly.querySelector('[data-plan-price]').textContent, '699');
     assert.equal(yearly.querySelector('[data-software-buy]').getAttribute('href'), '/buy?plan=yearly&ref=ALPHA2026');
     assert.equal(yearly.querySelector('[data-crypto-buy]').getAttribute('href'), '/buy?plan=yearly&payment=crypto&ref=ALPHA2026');
     click(ctx.dom, yearly.querySelector('[data-crypto-buy]')); await settle();
@@ -155,7 +198,7 @@ test('after the offer expires combined hosting uses the full bundle price withou
       checkbox.dispatchEvent(new ctx.dom.window.Event('change', { bubbles: true }));
       assert.equal(item.querySelector('[data-plan-price]').textContent, price);
       assert.equal(item.querySelector('[data-launch-terms]').hidden, true);
-      assert.equal(item.querySelector('[data-launch-old-price]').hidden, true);
+      assert.equal(item.querySelector('[data-launch-old-price]'), null);
       assert.equal(item.querySelector('[data-crypto-buy]')?.hidden ?? true, true);
     }
   } finally { ctx.dom.window.close(); }

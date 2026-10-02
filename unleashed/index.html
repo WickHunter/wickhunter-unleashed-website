@@ -14,11 +14,11 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
-  <link rel="stylesheet" href="/assets/site.css?v=20261001-support" />
+  <link rel="stylesheet" href="/assets/site.css?v=20261001-free-period" />
 </head>
 <body data-hub="https://hub.wickhunterunleashed.com" id="top">
   <div class="announcement">
-    <div class="container"><span class="pulse-dot" aria-hidden="true"></span><span><strong>Wick Hunter Unleashed is available.</strong> Self-host it or view the managed hosting option.</span></div>
+    <div class="container"><span class="pulse-dot" aria-hidden="true"></span><span data-availability-announcement><strong>Wick Hunter Unleashed is available.</strong> Self-host it or view the managed hosting option.</span><span data-free-announcement hidden><strong>Monthly and Yearly software are free until October 15 with a card.</strong> <a href="#pricing">See plans</a></span></div>
   </div>
 
   <header class="header">
@@ -211,19 +211,19 @@
         <div class="pricing-block">
           <div class="pricing-head"><span class="pill live"><i></i> Available now</span><h3>Choose your software licence</h3></div>
           <div class="launch-offer" data-launch-offer hidden aria-live="polite">
-            <strong>Launch offer · 25% off software</strong>
-            <p>Sign up through Oct 15, 2026 at 11:59 p.m. ET. Code <b>UNLEASHED25</b> is applied automatically. Monthly and Yearly keep the discount on every renewal while the subscription remains active; hosting is priced separately.</p>
+            <strong>Start free until October 15</strong>
+            <p>Start Monthly or Yearly software with a card before October 15, 2026: $0 until midnight at the start of October 15 (ET). Cancel before then to avoid a charge. Hosting is separate; Lifetime is paid today.</p>
             <p data-launch-free-copy></p>
             <p data-launch-crypto-copy hidden>Crypto Yearly and Lifetime are paid now. Crypto Yearly bought before Oct 15 provides access through Oct 15, 2027; neither crypto option renews automatically.</p>
           </div>
           <div class="hosting-choice">
-            <div><strong>Want it ready to use?</strong><p data-hosting-choice-standard>Add the rented VPS inside the plan you want below. Monthly and Yearly show one combined renewal; Lifetime keeps hosting as a separate monthly subscription.</p><p data-hosting-choice-launch hidden>The launch discount applies to software. Buy discounted Monthly or Yearly first, then, when available, add VPS hosting separately from your customer dashboard at its listed monthly price.</p><span class="hosting-choice-note" data-hosting-selection-status aria-live="polite">Checking hosting availability…</span></div>
+            <div><strong>Want it ready to use?</strong><p data-hosting-choice-standard>Add the rented VPS inside the plan you want below. Monthly and Yearly show one combined renewal; Lifetime keeps hosting as a separate monthly subscription.</p><p data-hosting-choice-launch hidden>Start with Monthly or Yearly software, then, when available, add VPS hosting separately from your customer dashboard at its listed monthly price.</p><span class="hosting-choice-note" data-hosting-selection-status aria-live="polite">Checking hosting availability…</span></div>
             <a class="btn quiet" href="#hosting">VPS details <span aria-hidden="true">↓</span></a>
           </div>
           <div class="pricing-cards">
             <article class="pricing-card" data-plan="monthly" data-base-price-cents="9900">
               <h4>Monthly</h4>
-              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>99</span><span class="period">/mo</span><del class="launch-old-price" data-launch-old-price hidden></del></div>
+              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>99</span><span class="period">/mo</span></div>
               <p class="price-caption" data-plan-caption>software · renews monthly</p>
               <p class="launch-terms" data-launch-terms hidden></p>
               <label class="hosting-select hosting-select-card"><input type="checkbox" data-hosting-select disabled aria-describedby="monthlyHostingHelp"><span data-hosting-standard-copy>Add rented VPS · +<span data-hosting-monthly-price>$20/month</span></span><span data-hosting-launch-copy hidden>Add rented VPS separately after software purchase, when available</span></label>
@@ -233,7 +233,7 @@
             <article class="pricing-card" data-plan="yearly" data-base-price-cents="69900">
               <span class="pill accent"><i></i> Annual billing</span>
               <h4>Yearly</h4>
-              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>699</span><span class="period">/yr</span><del class="launch-old-price" data-launch-old-price hidden></del></div>
+              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>699</span><span class="period">/yr</span></div>
               <p class="price-caption" data-plan-caption>software · renews annually</p>
               <p class="launch-terms" data-launch-terms hidden></p>
               <label class="hosting-select hosting-select-card"><input type="checkbox" data-hosting-select disabled aria-describedby="yearlyHostingHelp"><span data-hosting-standard-copy>Add rented VPS · +<span data-hosting-yearly-price>$240/year</span> (<span data-hosting-monthly-equiv>$20/month</span>)</span><span data-hosting-launch-copy hidden>Add rented VPS separately after software purchase, when available</span></label>
@@ -243,7 +243,7 @@
             <article class="pricing-card best" data-plan="lifetime" data-base-price-cents="99900">
               <span class="pill accent"><i></i> Best value</span>
               <h4>Lifetime</h4>
-              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>999</span><del class="launch-old-price" data-launch-old-price hidden></del></div>
+              <div class="price-row"><span class="curr">$</span><span class="price" data-plan-price>999</span></div>
               <p class="price-caption" data-plan-caption>software · one payment</p>
               <p class="launch-terms" data-launch-terms hidden></p>
               <p class="guarantee"><b>Source-code guarantee.</b> If Wick Hunter Software ever shuts down, lifetime licence holders receive the full source code.</p>
@@ -278,7 +278,7 @@
           </article>
           <div class="pricing-footer"><a class="btn quiet" href="/billing">Manage billing</a></div>
           <p class="fine" data-hosting-billing-standard>Monthly and Yearly bundles renew as one software + hosting charge. Lifetime remains a one-time software payment; its optional hosting renews separately each month. Cancelling stops future renewals and paid service continues through the current period.</p>
-          <p class="fine" data-hosting-billing-launch hidden>During the launch offer, Monthly and Yearly software checkout is discounted and VPS hosting, when available, is purchased separately from your customer dashboard. Hosting does not receive the software discount.</p>
+          <p class="fine" data-hosting-billing-launch hidden>Monthly and Yearly card software subscriptions started before October 15 have no software charge until the start of October 15, 2026 (Eastern Time). VPS hosting, when available, is purchased separately from your customer dashboard and is not part of the free software period.</p>
         </div>
       </div>
     </section>
@@ -288,9 +288,9 @@
         <div class="faq-copy"><span class="eyebrow">Frequently asked questions</span><h2>Clear answers before you buy.</h2><p>If your question isn't answered here, email us — see the contact section below.</p></div>
         <div class="faq-list">
           <article class="faq-item open"><button class="faq-q" aria-expanded="true">What is Wick Hunter Unleashed?<i>+</i></button><div class="faq-a"><p>Wick Hunter Unleashed is private trading automation software built and licensed by Wick Hunter Software LLC. It runs on one private server that you host or we provision, and connects to your own account at a supported exchange.</p></div></article>
-          <article class="faq-item"><button class="faq-q" aria-expanded="false">How do I buy Unleashed, and how fast do I get access?<i>+</i></button><div class="faq-a"><p>Pay by card on any plan, or pay once with crypto for Yearly or Lifetime access. Crypto purchases do not renew. The launch offer applies automatically to eligible software checkouts. Within minutes you'll receive an email with your personal install page — a private link that walks you through installing on your own server.</p></div></article>
+          <article class="faq-item"><button class="faq-q" aria-expanded="false">How do I buy Unleashed, and how fast do I get access?<i>+</i></button><div class="faq-a"><p>Pay by card on any plan, or pay once with crypto for Yearly or Lifetime access. Monthly and Yearly card subscriptions started before October 15 have no software charge until then; Lifetime and crypto are paid at checkout. Crypto purchases do not renew. Within minutes you'll receive an email with your personal install page — a private link that walks you through installing on your own server.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">What is the difference between the plans?<i>+</i></button><div class="faq-a"><p>Every plan includes the same software and updates. Card Monthly renews monthly and card Yearly renews annually; crypto Yearly is a one-time payment for one year. Lifetime is a one-time software purchase for the life of the product. Hosting is separate during the launch offer; after it ends, Monthly and Yearly hosting bundles can renew with software together.</p></div></article>
-          <article class="faq-item"><button class="faq-q" aria-expanded="false">Can Wick Hunter host my instance for me?<i>+</i></button><div class="faq-a"><p data-hosting-faq-standard>Yes. Managed hosting supports up to five connected exchange accounts on one private instance. Add it to Monthly for one $119 monthly renewal or to Yearly for one $939 annual renewal. With Lifetime, the $999 software purchase stays one-time and you confirm a separate $20 monthly hosting subscription next. We install Unleashed and email your dashboard address when it is ready.</p><p data-hosting-faq-launch hidden>When available, managed hosting supports up to five connected exchange accounts on one private instance. During the launch offer, buy discounted Monthly or Yearly software first, then add hosting separately from your customer dashboard. Lifetime also keeps hosting separate. We install Unleashed and email your dashboard address when it is ready.</p></div></article>
+          <article class="faq-item"><button class="faq-q" aria-expanded="false">Can Wick Hunter host my instance for me?<i>+</i></button><div class="faq-a"><p data-hosting-faq-standard>Yes. Managed hosting supports up to five connected exchange accounts on one private instance. Add it to Monthly for one $119 monthly renewal or to Yearly for one $939 annual renewal. With Lifetime, the $999 software purchase stays one-time and you confirm a separate $20 monthly hosting subscription next. We install Unleashed and email your dashboard address when it is ready.</p><p data-hosting-faq-launch hidden>When available, managed hosting supports up to five connected exchange accounts on one private instance. Start with Monthly or Yearly software, then add hosting separately from your customer dashboard. Lifetime also keeps hosting separate. We install Unleashed and email your dashboard address when it is ready.</p></div></article>
          <article class="faq-item"><button class="faq-q" aria-expanded="false">What happens to my lifetime licence if the company closes?<i>+</i></button><div class="faq-a"><p>Lifetime licence holders receive the complete source code, so they can keep running and maintaining the software themselves. Subscriptions simply stop being charged.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">Can I cancel?<i>+</i></button><div class="faq-a"><p>Yes. Cancel card subscriptions any time from the billing portal; paid access continues through the current period. Crypto Yearly and Lifetime do not renew. Hosting is separate during the launch offer, so manage its monthly subscription separately; outside the offer, an optional Monthly or Yearly bundle can be cancelled as one combined renewal. Lifetime hosting remains a separate monthly subscription.</p></div></article>
           <article class="faq-item"><button class="faq-q" aria-expanded="false">How do I reinstall on a new server?<i>+</i></button><div class="faq-a"><p>Open your personal install page again. It issues a fresh one-time install command you can run on the new machine — your licence isn't tied to a specific server.</p></div></article>
@@ -339,6 +339,6 @@
     </div>
   <p style="text-align:center"><a href="/tutorials/">Video tutorials</a> · <a href="/support/" data-open-support>Chat support</a></p></footer>
 
-  <script src="/assets/site.js?v=20261001-support" defer></script>
+  <script src="/assets/site.js?v=20261001-free-period" defer></script>
 </body>
 </html>
