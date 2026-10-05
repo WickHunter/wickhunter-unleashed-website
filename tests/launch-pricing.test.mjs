@@ -236,8 +236,8 @@ test('launch checkout posts a stable attempt on retry, switches payment identity
   } finally { ctx.dom.window.close(); }
 });
 
-test('crypto remains available with separately billed VPS and preserves the hosting handoff', async () => {
-  for (const [plan, now] of [['yearly', prelaunch], ['lifetime', prelaunch], ['lifetime', redeemUntil]]) {
+test('Lifetime crypto remains available with separately billed VPS and preserves the hosting handoff', async () => {
+  for (const [plan, now] of [['lifetime', prelaunch], ['lifetime', redeemUntil]]) {
     const seen = [];
     const ctx = await page({ now, checkout: body => {
       seen.push(body);

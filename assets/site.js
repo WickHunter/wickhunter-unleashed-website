@@ -67,6 +67,7 @@
   var launchPlans = {};
   var cryptoPlans = {};
   var checkoutMode = 'unknown';
+  var twoStepHostingEnabled = false;
   var incomingReferral = new URLSearchParams(window.location.search).get('ref');
   if (!incomingReferral || incomingReferral.length > 128) incomingReferral = null;
   function withReferral(href) {
@@ -85,15 +86,16 @@
     if (!card) return;
     var plan = card.dataset.plan;
     var checkbox = card.querySelector('[data-hosting-select]');
+    if (checkbox && hostingMonthlyCents > 0) checkbox.disabled = plan !== 'lifetime' && !bundleCheckoutEnabled;
     var selected = !!(checkbox && checkbox.checked);
-    var launchOfferSeparateChoice = launchActive() && /^(monthly|yearly)$/.test(plan) && !!launchPlans[plan];
+    var launchOfferSeparateChoice = plan === 'lifetime' && twoStepHostingEnabled;
     var baseCents = Number(card.dataset.basePriceCents);
     var price = card.querySelector('[data-plan-price]');
     var caption = card.querySelector('[data-plan-caption]');
     var link = card.querySelector('[data-software-buy]');
     var status = card.querySelector('[data-hosting-card-status]');
     if (!(baseCents >= 0) || !price || !caption || !link) return;
-    var launchSeparateVps = launchActive() && selected && /^(monthly|yearly)$/.test(plan) && !!launchPlans[plan];
+    var launchSeparateVps = selected && launchOfferSeparateChoice;
     var softwareCents = baseCents;
     var total = baseCents;
     if (selected && !launchSeparateVps && plan === 'monthly') total += hostingMonthlyCents;
@@ -140,10 +142,14 @@
           : 'Add hosting for $' + money(hostingMonthlyCents * 12) + ' per year.';
       if (plan === 'lifetime') status.textContent = '$' + money(softwareCents)
         + ' software today; confirm the separate $' + money(hostingMonthlyCents) + ' monthly hosting subscription next.';
+      if (twoStepHostingEnabled && plan === 'lifetime') status.textContent = selected
+        ? 'Step 1: software checkout. Step 2: VPS $' + money(hostingMonthlyCents) + ' today, renewing monthly. Hosting checkout opens automatically.'
+        : 'Add VPS for $' + money(hostingMonthlyCents) + '/month, charged in the next checkout.';
     }
     link.textContent = launchSeparateVps ? 'Buy ' + (plan === 'monthly' ? 'Monthly' : 'Yearly')
       : selected ? (plan === 'lifetime' ? 'Buy Lifetime, then VPS' : 'Buy ' + (plan === 'monthly' ? 'Monthly' : 'Yearly') + ' + VPS')
       : 'Buy ' + plan.charAt(0).toUpperCase() + plan.slice(1);
+    if (selected && twoStepHostingEnabled) link.textContent = 'Buy ' + plan.charAt(0).toUpperCase() + plan.slice(1) + ' + VPS';
     var standardHostingCopy = card.querySelector('[data-hosting-standard-copy]');
     var launchHostingCopy = card.querySelector('[data-hosting-launch-copy]');
     if (standardHostingCopy) standardHostingCopy.hidden = launchOfferSeparateChoice;
@@ -162,8 +168,8 @@
     document.querySelectorAll('[data-free-announcement]').forEach(function (node) { node.hidden = !launchFreeCardPeriod(); });
     document.querySelectorAll('[data-starter-announcement]').forEach(function (node) { node.hidden = !launchActive(); });
     document.querySelectorAll('[data-availability-announcement]').forEach(function (node) { node.hidden = launchFreeCardPeriod(); });
-    document.querySelectorAll('[data-hosting-choice-standard], [data-hosting-billing-standard], [data-hosting-faq-standard]').forEach(function (node) { node.hidden = activeOffer; });
-    document.querySelectorAll('[data-hosting-choice-launch], [data-hosting-billing-launch], [data-hosting-faq-launch]').forEach(function (node) { node.hidden = !activeOffer; });
+    document.querySelectorAll('[data-hosting-choice-standard], [data-hosting-billing-standard], [data-hosting-faq-standard]').forEach(function (node) { node.hidden = activeOffer || twoStepHostingEnabled; });
+    document.querySelectorAll('[data-hosting-choice-launch], [data-hosting-billing-launch], [data-hosting-faq-launch]').forEach(function (node) { node.hidden = !activeOffer && !twoStepHostingEnabled; });
     var launchHandoff = activeOffer || !!(savedChoice && savedChoice.launchSoftwareFirst === true);
     document.querySelectorAll('[data-hosting-thanks-standard]').forEach(function (node) { node.hidden = launchHandoff; });
     document.querySelectorAll('[data-hosting-thanks-launch]').forEach(function (node) { node.hidden = !launchHandoff; });
@@ -178,8 +184,8 @@
       }
     }
   }
-  function launchCheckoutAttemptId(plan, payment, referral) {
-    var key = plan + ':' + payment + ':' + (referral || '');
+  function launchCheckoutAttemptId(plan, payment, referral, hosting) {
+    var key = plan + ':' + payment + ':' + (referral || '') + (hosting ? ':hosting' : '');
     var attempts = {};
     try {
       attempts = JSON.parse(localStorage.getItem(launchAttemptKey) || '{}') || {};
@@ -222,7 +228,7 @@
     var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
     try {
       var response = await fetch(url, Object.assign({}, init, { signal: controller.signal }));
-      return { ok: response.ok, data: await response.json() };
+      return { ok: response.ok, status: response.status, retryAfterSeconds: Number(response.headers && response.headers.get('retry-after')) || 0, data: await response.json() };
     } finally {
       clearTimeout(timer);
     }
@@ -240,14 +246,18 @@
     link.setAttribute('aria-disabled', 'true');
     link.classList.add('disabled');
     if (status) status.textContent = 'Opening secure checkout…';
+    var providerUnavailable = false;
+    var retryAfterSeconds = 0;
     try {
       var configuredTimeout = Number(document.body.getAttribute('data-hosting-checkout-timeout-ms'));
       var timeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout >= 10 && configuredTimeout <= 30_000
-        ? configuredTimeout : 15_000;
+        ? configuredTimeout : 30_000;
       var result = await fetchJsonWithDeadline(hub.replace(/\/+$/, '') + '/api/hosting/bundle-checkout', {
         method: 'POST', mode: 'cors', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ plan: plan, checkoutAttemptId: attemptId })
       }, timeoutMs);
+      if (result.status === 429) retryAfterSeconds = Math.max(60, Number(result.data && result.data.retryAfterSeconds) || result.retryAfterSeconds);
+      providerUnavailable = !result.ok && result.data && result.data.code === 'PROVIDER_STATUS_UNKNOWN';
       var data = result.ok ? result.data : null;
       var expectedAmount = Number(card.dataset.basePriceCents) + hostingMonthlyCents * (plan === 'yearly' ? 12 : 1);
       var expectedInterval = plan === 'yearly' ? 'year' : 'month';
@@ -264,15 +274,22 @@
       delete link.dataset.pending;
       link.setAttribute('aria-disabled', 'false');
       link.classList.remove('disabled');
-      if (status) status.textContent = 'Checkout could not be opened. Try again; you will not be charged twice.';
+      var waitMinutes = Math.ceil(retryAfterSeconds / 60);
+      if (status) status.textContent = retryAfterSeconds
+        ? 'Too many checkout attempts. Please wait ' + waitMinutes + (waitMinutes === 1 ? ' minute' : ' minutes') + ' before trying again. No payment was submitted.'
+        : providerUnavailable
+        ? 'The VPS provider is temporarily unavailable. No payment was submitted. Please try again shortly.'
+        : 'Checkout could not be opened. Try again; you will not be charged twice.';
     }
   }
   async function startLaunchCheckout(card, link, payment) {
     if (link.dataset.pending === 'true') return;
     var plan = card.dataset.plan;
     var status = card.querySelector('[data-hosting-card-status]');
+    var checkbox = card.querySelector('[data-hosting-select]');
+    var hosting = twoStepHostingEnabled && !!(checkbox && !checkbox.disabled && checkbox.checked);
     var attemptId;
-    try { attemptId = launchCheckoutAttemptId(plan, payment, incomingReferral); }
+    try { attemptId = launchCheckoutAttemptId(plan, payment, incomingReferral, hosting); }
     catch (_) { if (status) status.textContent = 'Checkout could not be started in this browser. Refresh and try again.'; return; }
     link.dataset.pending = 'true';
     link.setAttribute('aria-disabled', 'true');
@@ -282,6 +299,7 @@
       var result = await fetchJsonWithDeadline('/api/billing/checkout', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ plan: plan, payment: payment, attemptId: attemptId,
+          ...(hosting ? { hosting: true } : {}),
           ...(incomingReferral ? { referral: incomingReferral } : {}) })
       }, 15_000);
       if (!result.ok && incomingReferral && result.data?.error === 'Referral discount is not active') {
@@ -291,7 +309,8 @@
         result = await fetchJsonWithDeadline('/api/billing/checkout', {
           method: 'POST', headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ plan: plan, payment: payment,
-            attemptId: launchCheckoutAttemptId(plan, payment, null) })
+            ...(hosting ? { hosting: true } : {}),
+            attemptId: launchCheckoutAttemptId(plan, payment, null, hosting) })
         }, 15_000);
       }
       var checkoutUrl = result.ok && result.data && result.data.ok === true ? safeStripeCheckoutUrl(result.data.url) : null;
@@ -318,8 +337,7 @@
         var checkbox = card && card.querySelector('[data-hosting-select]');
         if (link.getAttribute('aria-disabled') === 'true') { event.preventDefault(); return; }
         var selected = !!(checkbox && !checkbox.disabled && checkbox.checked);
-        var launchSoftwareFirst = selected && card && launchActive() && !!launchPlans[card.dataset.plan]
-          && /^(monthly|yearly)$/.test(card.dataset.plan);
+        var launchSoftwareFirst = selected && card && card.dataset.plan === 'lifetime' && twoStepHostingEnabled;
         rememberHosting(selected, card && card.dataset.plan, launchSoftwareFirst);
         if (launchSoftwareFirst) {
           event.preventDefault();
@@ -374,6 +392,7 @@
         if (!data || data.ok !== true || !Array.isArray(data.plans)) { checkoutMode = 'unavailable'; renderPlanCards(); return; }
         checkoutMode = data.mode === 'live' ? 'live' : data.mode === 'test' ? 'test' : 'unavailable';
         var offer = data.launch;
+        twoStepHostingEnabled = checkoutMode === 'live' && offer && offer.hostingCheckoutEnabled === true;
         if (checkoutMode === 'live' && offer && offer.active === true && Number.isFinite(offer.firstPaymentAtMs)
           && Number.isFinite(offer.redeemUntilMs) && offer.firstPaymentAtMs < offer.redeemUntilMs
           && Date.now() < offer.redeemUntilMs) {
@@ -400,6 +419,7 @@
     function hostingUnavailable(message, definitive) {
       if (definitive) rememberHosting(false);
       bundleCheckoutEnabled = false;
+      hostingMonthlyCents = 0;
       hostingCheckboxes.forEach(function (checkbox) { checkbox.disabled = true; checkbox.checked = false; });
       renderPlanCards();
       if (hostingCombinedNext) hostingCombinedNext.hidden = true;
@@ -459,9 +479,7 @@
           clearCheckoutAttempt();
         }
         document.querySelectorAll('[data-hosting-selection-status]').forEach(function (node) {
-          node.textContent = launchActive()
-            ? 'Buy software first, then add VPS hosting separately from your customer dashboard.'
-            : bundleCheckoutEnabled
+          node.textContent = bundleCheckoutEnabled
               ? 'Available · choose the matching billing option inside any licence card'
             : 'Lifetime hosting is available separately; combined Monthly and Yearly checkout is not available yet.';
         });
