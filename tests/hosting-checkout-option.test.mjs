@@ -66,6 +66,48 @@ function choose(dom, plan) {
   return { card, checkbox, link: card.querySelector("[data-software-buy]") };
 }
 
+test('VPS selection is sent to two-step checkout for every plan regardless of offer timing or response order', async () => {
+  for (const active of [true, false]) for (const [billingDelayMs, hostingDelayMs] of [[0, 25], [25, 0]]) {
+    const billing = { ...launchBilling, launch: { ...launchBilling.launch, active, hostingCheckoutEnabled: true } };
+    const ctx = await page('unleashed/index.html', response({ ...goodOptions, bundleEnabled: false }), { billing, billingDelayMs, hostingDelayMs });
+    try {
+      await waitFor(() => [...ctx.dom.window.document.querySelectorAll('[data-hosting-select]')].every(box => !box.disabled));
+      for (const plan of ['monthly', 'yearly', 'lifetime']) {
+        const selected = choose(ctx.dom, plan);
+        assert.match(selected.card.querySelector('[data-hosting-card-status]').textContent, /VPS \$20 today, renewing monthly/);
+        assert.equal(selected.card.querySelector('[data-plan-price]').textContent, { monthly: '99', yearly: '699', lifetime: '999' }[plan]);
+        selected.link.dispatchEvent(new ctx.dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
+        await settle();
+        const call = ctx.calls.filter(call => call.url === '/api/billing/checkout').at(-1);
+        assert.equal(JSON.parse(call.init.body).hosting, true);
+        assert.equal(JSON.parse(call.init.body).plan, plan);
+      }
+      assert.equal(ctx.calls.some(call => call.url.includes('bundle-checkout')), false);
+    } finally { ctx.dom.window.close(); }
+  }
+});
+
+test('changing VPS selection changes checkout identity and switching back reuses its original attempt', async () => {
+  const billing = { ...launchBilling, launch: { ...launchBilling.launch, hostingCheckoutEnabled: true } };
+  const ctx = await page('unleashed/index.html', response(goodOptions), { billing });
+  try {
+    const selected = choose(ctx.dom, 'yearly');
+    const attempts = [];
+    for (const hosting of [true, false, true]) {
+      selected.checkbox.checked = hosting;
+      selected.checkbox.dispatchEvent(new ctx.dom.window.Event('change', { bubbles: true }));
+      delete selected.link.dataset.pending;
+      selected.link.dispatchEvent(new ctx.dom.window.MouseEvent('click', { bubbles: true, cancelable: true }));
+      await settle();
+      attempts.push(JSON.parse(ctx.calls.filter(call => call.url === '/api/billing/checkout').at(-1).init.body));
+    }
+    assert.equal(attempts[0].hosting, true);
+    assert.equal(attempts[1].hosting, undefined);
+    assert.notEqual(attempts[0].attemptId, attempts[1].attemptId);
+    assert.equal(attempts[0].attemptId, attempts[2].attemptId);
+  } finally { ctx.dom.window.close(); }
+});
+
 test("each licence card shows its exact selected hosting billing shape", async () => {
   const { dom } = await page("unleashed/index.html", response(goodOptions));
   try {
@@ -142,7 +184,7 @@ test("active launch offer does not promise VPS availability when the hosting opt
     const card = ctx.dom.window.document.querySelector('[data-plan="yearly"]');
     await waitFor(() => card.querySelector("[data-hosting-select]").disabled
       && !ctx.dom.window.document.querySelector("[data-hosting-choice-launch]").hidden);
-    assert.match(ctx.dom.window.document.querySelector("[data-hosting-choice-launch]").textContent, /when available/);
+    assert.match(ctx.dom.window.document.querySelector("[data-hosting-choice-launch]").textContent, /when available/i);
     assert.match(ctx.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /not available for purchase yet/);
     assert.match(card.querySelector("[data-hosting-launch-copy]").textContent, /when available/);
     card.querySelector("[data-software-buy]").dispatchEvent(new ctx.dom.window.MouseEvent("click", { bubbles: true, cancelable: true }));

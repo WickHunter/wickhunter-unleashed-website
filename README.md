@@ -44,7 +44,17 @@ sets security headers and long-lived caching for `/assets/*`.
    `_redirects` sends `/buy` to the Hub and passes the `?plan=` query
    through untouched, so the Hub is what maps `plan=` to the right Stripe
    price.
-2. **Managed hosting.** Hosting can be bundled with Monthly or Yearly, or added
+2. **Managed hosting.** The current Hub advertises `launch.hostingCheckoutEnabled`.
+   With that flag, selecting VPS on any software plan sends `hosting:true` to
+   `/api/billing/checkout`. Software checkout automatically returns to the Hub's
+   `/checkout/hosting` page, which verifies settlement and webhook fulfillment
+   before opening the separate $20/month hosting subscription checkout. Hosting
+   charges immediately on confirmation, including during the software free period.
+   Yearly software still has monthly hosting; Lifetime software remains one-time.
+   Checkout retry identities include the VPS selection. The continuation secret
+   stays in the return URL fragment and only authorizes this hosting checkout.
+
+   Older Hubs without that flag retain the following bundle flow. Hosting can be bundled with Monthly or Yearly, or added
    separately to Lifetime. The site reads the current plan, regions, backup coverage, price,
    and availability from the Hub's public `/api/hosting/options` response so
    the Hub configuration remains the source of truth. The Hub also owns
