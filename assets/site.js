@@ -228,7 +228,7 @@
     var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
     try {
       var response = await fetch(url, Object.assign({}, init, { signal: controller.signal }));
-      return { ok: response.ok, data: await response.json() };
+      return { ok: response.ok, status: response.status, retryAfterSeconds: Number(response.headers && response.headers.get('retry-after')) || 0, data: await response.json() };
     } finally {
       clearTimeout(timer);
     }
@@ -247,6 +247,7 @@
     link.classList.add('disabled');
     if (status) status.textContent = 'Opening secure checkout…';
     var providerUnavailable = false;
+    var retryAfterSeconds = 0;
     try {
       var configuredTimeout = Number(document.body.getAttribute('data-hosting-checkout-timeout-ms'));
       var timeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout >= 10 && configuredTimeout <= 30_000
@@ -255,6 +256,7 @@
         method: 'POST', mode: 'cors', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ plan: plan, checkoutAttemptId: attemptId })
       }, timeoutMs);
+      if (result.status === 429) retryAfterSeconds = Math.max(60, result.retryAfterSeconds);
       providerUnavailable = !result.ok && result.data && result.data.code === 'PROVIDER_STATUS_UNKNOWN';
       var data = result.ok ? result.data : null;
       var expectedAmount = Number(card.dataset.basePriceCents) + hostingMonthlyCents * (plan === 'yearly' ? 12 : 1);
@@ -272,7 +274,10 @@
       delete link.dataset.pending;
       link.setAttribute('aria-disabled', 'false');
       link.classList.remove('disabled');
-      if (status) status.textContent = providerUnavailable
+      var waitMinutes = Math.ceil(retryAfterSeconds / 60);
+      if (status) status.textContent = retryAfterSeconds
+        ? 'Too many checkout attempts. Please wait ' + waitMinutes + (waitMinutes === 1 ? ' minute' : ' minutes') + ' before trying again. No payment was submitted.'
+        : providerUnavailable
         ? 'The VPS provider is temporarily unavailable. No payment was submitted. Please try again shortly.'
         : 'Checkout could not be opened. Try again; you will not be charged twice.';
     }

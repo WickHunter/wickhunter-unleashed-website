@@ -232,6 +232,20 @@ test("combined checkout posts the exact plan and reuses one browser attempt id a
   } finally { dom.window.close(); }
 });
 
+test('rate limiting displays the server retry delay without submitting payment', async () => {
+  const ctx = await page('unleashed/index.html', response(goodOptions), {
+    bundle: () => ({ok:false,status:429,headers:{get:()=>'392'},json:async()=>({ok:false,error:'rate limited'})}),
+  });
+  try {
+    const selected = choose(ctx.dom, 'monthly');
+    selected.link.dispatchEvent(new ctx.dom.window.MouseEvent('click', {bubbles:true,cancelable:true}));
+    await settle();
+    assert.match(selected.card.querySelector('[data-hosting-card-status]').textContent, /wait 7 minutes/);
+    assert.equal(selected.link.getAttribute('aria-disabled'), 'false');
+    assert.equal(ctx.navigations.length, 0);
+  } finally { ctx.dom.window.close(); }
+});
+
 test('provider outage is identified and leaves the checkout retryable', async () => {
   const ctx = await page('unleashed/index.html', response(goodOptions), {
     bundle: () => response({ok:false,code:'PROVIDER_STATUS_UNKNOWN',error:'upstream unavailable'}, false),
