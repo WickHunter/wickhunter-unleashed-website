@@ -44,17 +44,19 @@ sets security headers and long-lived caching for `/assets/*`.
    `_redirects` sends `/buy` to the Hub and passes the `?plan=` query
    through untouched, so the Hub is what maps `plan=` to the right Stripe
    price.
-2. **Managed hosting.** The current Hub advertises `launch.hostingCheckoutEnabled`.
-   With that flag, selecting VPS on any software plan sends `hosting:true` to
-   `/api/billing/checkout`. Software checkout automatically returns to the Hub's
+2. **Managed hosting.** Monthly and Yearly plus VPS use one combined checkout
+   and one subscription, including during the launch offer. Both software and
+   VPS are free until October 15, 2026 at 00:00 Eastern Time; renewals are
+   $119/month or $939/year ($699 software plus $240 annual hosting).
+   Lifetime retains the `launch.hostingCheckoutEnabled` handoff: it sends
+   `hosting:true` to `/api/billing/checkout` and automatically returns to the Hub's
    `/checkout/hosting` page, which verifies settlement and webhook fulfillment
    before opening the separate $20/month hosting subscription checkout. Hosting
-   charges immediately on confirmation, including during the software free period.
-   Yearly software still has monthly hosting; Lifetime software remains one-time.
+   charges immediately on confirmation. Lifetime software remains one-time.
    Checkout retry identities include the VPS selection. The continuation secret
    stays in the return URL fragment and only authorizes this hosting checkout.
 
-   Older Hubs without that flag retain the following bundle flow. Hosting can be bundled with Monthly or Yearly, or added
+   Hosting can be bundled with Monthly or Yearly, or added
    separately to Lifetime. The site reads the current plan, regions, backup coverage, price,
    and availability from the Hub's public `/api/hosting/options` response so
    the Hub configuration remains the source of truth. The Hub also owns
@@ -70,7 +72,8 @@ sets security headers and long-lived caching for `/assets/*`.
    current plan/attempt so an ambiguous response can be retried idempotently,
    validates the returned amount/interval and an HTTPS `checkout.stripe.com`
    URL, then navigates. The button remains disabled only while the request is
-   pending and a 15-second deadline restores retry on a hung request. The
+   pending and a 30-second deadline restores retry on a hung request. Provider
+   outages have a specific retryable message without submitting payment. The
    checkboxes stay disabled until `/api/hosting/options` reports a final price,
    purchasability, `maximumConnectedAccounts`, and `bundleEnabled:true`;
    Lifetime's separate path needs the final hosting price and purchasability
