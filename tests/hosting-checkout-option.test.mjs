@@ -234,7 +234,7 @@ test("combined checkout posts the exact plan and reuses one browser attempt id a
 
 test('rate limiting displays the server retry delay without submitting payment', async () => {
   const ctx = await page('unleashed/index.html', response(goodOptions), {
-    bundle: () => ({ok:false,status:429,headers:{get:()=>'392'},json:async()=>({ok:false,error:'rate limited'})}),
+    bundle: () => ({ok:false,status:429,headers:{get:()=>null},json:async()=>({ok:false,error:'rate limited',retryAfterSeconds:392})}),
   });
   try {
     const selected = choose(ctx.dom, 'monthly');

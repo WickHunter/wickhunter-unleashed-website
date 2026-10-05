@@ -256,7 +256,7 @@
         method: 'POST', mode: 'cors', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ plan: plan, checkoutAttemptId: attemptId })
       }, timeoutMs);
-      if (result.status === 429) retryAfterSeconds = Math.max(60, result.retryAfterSeconds);
+      if (result.status === 429) retryAfterSeconds = Math.max(60, Number(result.data && result.data.retryAfterSeconds) || result.retryAfterSeconds);
       providerUnavailable = !result.ok && result.data && result.data.code === 'PROVIDER_STATUS_UNKNOWN';
       var data = result.ok ? result.data : null;
       var expectedAmount = Number(card.dataset.basePriceCents) + hostingMonthlyCents * (plan === 'yearly' ? 12 : 1);
