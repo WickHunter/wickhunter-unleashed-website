@@ -44,40 +44,28 @@ sets security headers and long-lived caching for `/assets/*`.
    `_redirects` sends `/buy` to the Hub and passes the `?plan=` query
    through untouched, so the Hub is what maps `plan=` to the right Stripe
    price.
-2. **Managed hosting.** Monthly and Yearly plus VPS use one combined checkout
-   and one subscription, including during the launch offer. Both software and
-   VPS are free until October 15, 2026 at 00:00 Eastern Time; renewals are
-   $119/month or $939/year ($699 software plus $240 annual hosting).
-   Lifetime retains the `launch.hostingCheckoutEnabled` handoff: it sends
-   `hosting:true` to `/api/billing/checkout` and automatically returns to the Hub's
-   `/checkout/hosting` page, which verifies settlement and webhook fulfillment
-   before opening the separate $20/month hosting subscription checkout. Hosting
-   charges immediately on confirmation. Lifetime software remains one-time.
-   Checkout retry identities include the VPS selection. The continuation secret
-   stays in the return URL fragment and only authorizes this hosting checkout.
+2. **Managed hosting.** All three plan cards use one `/api/billing/checkout`
+   request for software-only or software + VPS. The launch offer applies to
+   software only: eligible software-only Monthly/Yearly subscriptions start
+   billing October 15, 2026, while any selected VPS is charged immediately.
+   Hosted Monthly is $119/month; hosted Yearly is $939/year ($699 software +
+   $240/year VPS); Lifetime + VPS is $999 once for software plus $20 today,
+   then $20/month for VPS. Promotion codes discount only software. Checkout
+   retry identities use a new versioned key and include plan, payment type,
+   referral, and hosting selection, so prior software-only attempts cannot be
+   reused for a combined purchase.
 
-   Hosting can be bundled with Monthly or Yearly, or added
-   separately to Lifetime. The site reads the current plan, regions, backup coverage, price,
+   The site reads the current plan, regions, backup coverage, price,
    and availability from the Hub's public `/api/hosting/options` response so
    the Hub configuration remains the source of truth. The Hub also owns
    eligibility, one-instance enforcement, checkout, provisioning, and
    customer email. Each licence card has its own availability-gated hosting
-   checkbox. Monthly shows one $119 monthly software + hosting renewal; Yearly
-   shows one $939 annual renewal ($699 software + $240 hosting); Lifetime keeps
-   its $999 one-time software price and leads to a separately confirmed $20
-   monthly hosting subscription.
-
-   Checked Monthly and Yearly cards POST `{plan, checkoutAttemptId}` to
-   `/api/hosting/bundle-checkout`. The browser persists one random UUID for the
-   current plan/attempt so an ambiguous response can be retried idempotently,
-   validates the returned amount/interval and an HTTPS `checkout.stripe.com`
-   URL, then navigates. The button remains disabled only while the request is
-   pending and a 30-second deadline restores retry on a hung request. Provider
-   outages have a specific retryable message without submitting payment. The
-   checkboxes stay disabled until `/api/hosting/options` reports a final price,
-   purchasability, `maximumConnectedAccounts`, and `bundleEnabled:true`;
-   Lifetime's separate path needs the final hosting price and purchasability
-   but not the bundle flag.
+   checkbox. It stays disabled until the launch endpoint and `/api/hosting/options`
+   both confirm combined-checkout readiness and a final purchasable VPS price.
+   Selected cards send `{plan, payment:'card', hosting:true, attemptId,
+   referral?}` through the same-origin billing proxy. The browser validates the
+   Stripe-hosted HTTPS URL before navigating. Crypto remains available for
+   software-only Yearly and Lifetime purchases; mixed VPS checkout is card-only.
 
 3. **The Hub redirect targets**, if the Hub ever moves off the bare IP
    `45.76.105.174` onto its own domain — update the two lines in
@@ -85,11 +73,11 @@ sets security headers and long-lived caching for `/assets/*`.
 
 ## Focused checkout verification
 
-Run `node --test tests/hosting-checkout-option.test.mjs`. The jsdom suite drives
-all three card selections, exact $119/month and $939/year bundle totals,
-Lifetime's separate $20/month follow-up, idempotent retry, plan changes,
-request timeout recovery, response price/interval checks, Stripe URL validation,
-and unavailable-option states without making a network request.
+Run `node --test tests/hosting-checkout-option.test.mjs`. The jsdom suite covers
+all six software/hosting choices, prices and billing disclosures, the immediate
+VPS charge during the software offer, versioned idempotent retries, referral
+propagation, Stripe URL validation, and unavailable-option states without
+making a network request.
 
 ## Customer policies
 

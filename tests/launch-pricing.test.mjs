@@ -14,7 +14,7 @@ const settle = async () => { await new Promise(resolve => setImmediate(resolve))
 const plans = (active = true, crypto = true) => ({
   ok: true,
   mode: 'live',
-  launch: { active, firstPaymentAtMs: firstPayment,
+  launch: { active, hostingCheckoutEnabled: true, firstPaymentAtMs: firstPayment,
     redeemUntilMs: redeemUntil, cryptoEnabled: crypto },
   plans: [
     { key: 'monthly', amountCents: 9900, cryptoAvailable: false },
@@ -22,7 +22,7 @@ const plans = (active = true, crypto = true) => ({
     { key: 'lifetime', amountCents: 99900, cryptoAvailable: crypto },
   ],
 });
-const hosting = { ok: true, purchasable: true, priceIsProposed: false, bundleEnabled: true,
+const hosting = { ok: true, purchasable: true, priceIsProposed: false, combinedCheckoutEnabled: true, bundleEnabled: false,
   monthlyPriceLabel: '$20.00', planLabel: 'Private VPS', regions: [{ label: 'Japan' }],
   managedBackupsIncluded: false, maximumConnectedAccounts: 5 };
 
@@ -55,9 +55,9 @@ test('verified free period shows full public prices and distinguishes immediate 
     assert.equal(dom.window.document.querySelector('[data-launch-offer]').hidden, false);
     assert.equal(dom.window.document.querySelector('[data-free-announcement]').hidden, false);
     assert.equal(dom.window.document.querySelector('[data-availability-announcement]').hidden, true);
-    assert.match(dom.window.document.querySelector('[data-launch-offer]').textContent, /\$0 until midnight at the start of October 15/);
-    assert.equal(dom.window.document.querySelector('[data-launch-free-copy]').textContent, 'Your first software charge uses the price confirmed at checkout.');
-    assert.match(dom.window.document.querySelector('[data-launch-offer]').textContent, /Start free until October 15/);
+    assert.match(dom.window.document.querySelector('[data-launch-offer]').textContent, /Eligible Monthly or Yearly software is \$0 until midnight at the start of October 15/);
+    assert.match(dom.window.document.querySelector('[data-launch-free-copy]').textContent, /software-only Monthly and Yearly plans/);
+    assert.match(dom.window.document.querySelector('[data-launch-offer]').textContent, /Software offer through October 15/);
     assert.doesNotMatch(dom.window.document.querySelector('[data-launch-offer]').textContent, /discount|promo code|25%/i);
     for (const [plan, price] of [['monthly', '99'], ['yearly', '699'], ['lifetime', '999']]) {
       const item = card(dom, plan);
@@ -100,7 +100,8 @@ test('home-page free-period announcement appears only while the verified period 
   try {
     const announcement = active.dom.window.document.querySelector('[data-free-announcement]');
     assert.equal(announcement.hidden, false);
-    assert.match(announcement.textContent, /Monthly and Yearly Unleashed software are free until October 15 with a card/);
+    assert.match(announcement.textContent, /Software-only Monthly and Yearly are free until October 15 with a card/);
+    assert.match(announcement.textContent, /Hosted plans are charged in full today/);
   } finally { active.dom.window.close(); }
   const expired = await page({ home: true, now: firstPayment });
   try {
@@ -236,33 +237,31 @@ test('launch checkout posts a stable attempt on retry, switches payment identity
   } finally { ctx.dom.window.close(); }
 });
 
-test('Lifetime crypto remains available with separately billed VPS and preserves the hosting handoff', async () => {
-  for (const [plan, now] of [['lifetime', prelaunch], ['lifetime', redeemUntil]]) {
-    const seen = [];
-    const ctx = await page({ now, checkout: body => {
-      seen.push(body);
-      return response({ ok: true, url: 'https://checkout.stripe.com/c/pay/crypto-hosting' });
-    } });
-    try {
-      const item = card(ctx.dom, plan);
-      const checkbox = item.querySelector('[data-hosting-select]');
-      checkbox.checked = true;
-      checkbox.dispatchEvent(new ctx.dom.window.Event('change', { bubbles: true }));
-      const crypto = item.querySelector('[data-crypto-buy]');
-      assert.equal(crypto.hidden, false);
-      assert.match(item.querySelector('[data-crypto-terms]').textContent, /No automatic renewal/);
-      click(ctx.dom, crypto); await settle();
-      assert.equal(seen.length, 1);
-      assert.equal(seen[0].plan, plan);
-      assert.equal(seen[0].payment, 'crypto');
-      assert.deepEqual(ctx.navigations, ['https://checkout.stripe.com/c/pay/crypto-hosting']);
-      const choice = JSON.parse(ctx.dom.window.localStorage.getItem('wh.hosting-choice.v1'));
-      assert.equal(choice.selected, true);
-      assert.equal(choice.plan, plan);
-      assert.equal(choice.launchSoftwareFirst === true, plan === 'yearly');
-      assert.equal(ctx.calls.some(call => call.url.includes('bundle-checkout')), false);
-    } finally { ctx.dom.window.close(); }
-  }
+test('Lifetime + VPS is one card checkout while Lifetime crypto stays software-only', async () => {
+  const seen = [];
+  const ctx = await page({ checkout: body => {
+    seen.push(body);
+    return response({ ok: true, url: 'https://checkout.stripe.com/c/pay/lifetime-hosted' });
+  } });
+  try {
+    const item = card(ctx.dom, 'lifetime');
+    const checkbox = item.querySelector('[data-hosting-select]');
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new ctx.dom.window.Event('change', { bubbles: true }));
+    const crypto = item.querySelector('[data-crypto-buy]');
+    assert.equal(crypto.hidden, true, 'mixed software + VPS subscription is card-only');
+    assert.match(item.querySelector('[data-hosting-card-status]').textContent, /\$20 VPS today, then monthly/);
+    click(ctx.dom, item.querySelector('[data-software-buy]')); await settle();
+    assert.equal(seen.length, 1);
+    assert.deepEqual({ plan: seen[0].plan, payment: seen[0].payment, hosting: seen[0].hosting },
+      { plan: 'lifetime', payment: 'card', hosting: true });
+    assert.deepEqual(ctx.navigations, ['https://checkout.stripe.com/c/pay/lifetime-hosted']);
+    assert.equal(ctx.calls.some(call => call.url.includes('bundle-checkout')), false);
+
+    checkbox.checked = false;
+    checkbox.dispatchEvent(new ctx.dom.window.Event('change', { bubbles: true }));
+    assert.equal(crypto.hidden, false, 'software-only crypto remains available');
+  } finally { ctx.dom.window.close(); }
 });
 
 test('starter bonus follows the verified offer and disappears at its deadline', async () => {
