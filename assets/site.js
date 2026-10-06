@@ -85,7 +85,7 @@
       if (!terms.hidden) {
         if (plan === 'lifetime') terms.textContent = 'One-time software payment today. Lifetime software access.';
         else terms.textContent = selected
-          ? 'VPS costs are billed immediately. Software discounts apply only to the software price.'
+          ? 'VPS plans bill immediately due to VPS provider fees. Software discounts apply only to software.'
           : launchFreeCardPeriod()
           ? 'Card required. $0 today; first ' + (plan === 'monthly' ? 'monthly' : 'yearly') + ' charge on Oct 15, 2026 at 12:00 a.m. ET. Confirm your price at checkout.'
           : 'First ' + (plan === 'monthly' ? 'monthly' : 'yearly') + ' charge today. Confirm your price at checkout.';
@@ -110,13 +110,13 @@
     if (plan === 'lifetime') caption.textContent = selected ? 'software once · VPS billed monthly' : 'software · one payment';
     if (status && hostingMonthlyCents > 0 && link.dataset.pending !== 'true') {
       if (plan === 'monthly') status.textContent = selected
-        ? 'One checkout: $' + money(total) + ' due today, then monthly. Any offer code applies only to software.'
+        ? 'VPS plans bill immediately due to VPS provider fees. One checkout: $' + money(total) + ' due today, then monthly. Offers apply only to software.'
         : 'Add hosting for $' + money(hostingMonthlyCents) + ' per month.';
       else if (plan === 'yearly') status.textContent = selected
-        ? 'One checkout: $' + money(total) + ' due today, then annually. Any offer code applies only to software.'
+        ? 'VPS plans bill immediately due to VPS provider fees. One checkout: $' + money(total) + ' due today, then annually. Offers apply only to software.'
         : 'Add hosting for $' + money(hostingMonthlyCents * 12) + ' per year.';
       if (plan === 'lifetime') status.textContent = selected
-        ? '$' + money(softwareCents) + ' software once + $' + money(hostingMonthlyCents) + ' VPS today, then monthly.'
+        ? 'VPS plans bill immediately due to VPS provider fees. $' + money(softwareCents) + ' software once + $' + money(hostingMonthlyCents) + ' VPS today, then monthly.'
         : '$' + money(softwareCents) + ' one-time software payment.';
     }
     link.textContent = selected ? 'Buy ' + (plan === 'monthly' ? 'Monthly' : plan === 'yearly' ? 'Yearly' : 'Lifetime') + ' + VPS'
@@ -125,7 +125,9 @@
     var launchHostingCopy = card.querySelector('[data-hosting-launch-copy]');
     if (standardHostingCopy) standardHostingCopy.hidden = false;
     if (launchHostingCopy) launchHostingCopy.hidden = true;
-    link.setAttribute('href', withReferral(link.dataset.baseHref));
+    var buyHref = withReferral(link.dataset.baseHref);
+    if (selected) buyHref += '&hosting=true';
+    link.setAttribute('href', buyHref);
     var routeReady = checkoutMode === 'live' && (!selected || hostingCheckoutEnabled);
     link.setAttribute('aria-disabled', String(!routeReady));
     link.classList.toggle('disabled', !routeReady);
@@ -361,7 +363,7 @@
         refreshHostingCheckoutReadiness();
         document.querySelectorAll('[data-hosting-selection-status]').forEach(function (node) {
           node.textContent = hostingCheckoutEnabled
-              ? 'Available · selected VPS is billed immediately; software offers do not discount VPS charges.'
+              ? 'Available · VPS plans bill immediately due to VPS provider fees.'
             : 'Combined software + VPS checkout is not available yet.';
         });
 

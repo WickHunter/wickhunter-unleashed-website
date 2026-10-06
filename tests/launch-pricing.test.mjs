@@ -101,7 +101,7 @@ test('home-page free-period announcement appears only while the verified period 
     const announcement = active.dom.window.document.querySelector('[data-free-announcement]');
     assert.equal(announcement.hidden, false);
     assert.match(announcement.textContent, /Software-only Monthly and Yearly are free until October 15 with a card/);
-    assert.match(announcement.textContent, /Hosted plans are charged in full today/);
+    assert.match(announcement.textContent, /VPS plans bill immediately due to VPS provider fees/);
   } finally { active.dom.window.close(); }
   const expired = await page({ home: true, now: firstPayment });
   try {

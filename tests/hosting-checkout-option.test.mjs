@@ -69,6 +69,10 @@ test("all three hosted choices use one immediate mixed card checkout even withou
       assert.equal(chosen.box.disabled, false);
       assert.equal(chosen.card.querySelector("[data-plan-price]").textContent, displayed);
       assert.match(chosen.card.querySelector("[data-hosting-card-status]").textContent, label);
+      assert.match(chosen.card.querySelector("[data-hosting-card-status]").textContent, /VPS plans bill immediately due to VPS provider fees/);
+      assert.match(chosen.link.getAttribute("href"), new RegExp(`[?&]plan=${plan}(?:&|$)`));
+      assert.match(chosen.link.getAttribute("href"), /[?&]hosting=true(?:&|$)/);
+      assert.match(chosen.link.getAttribute("href"), /[?&]ref=REF-123(?:&|$)/);
       assert.equal(chosen.card.querySelector("[data-crypto-buy]")?.hidden ?? true, true, "mixed hosting has no crypto checkout");
       await click(ctx.dom, chosen.link);
       const call = ctx.calls.filter(c => c.url === "/api/billing/checkout").at(-1);
@@ -87,9 +91,10 @@ test("with an active software offer, selecting VPS replaces the free-period copy
   const ctx = await page();
   try {
     const hosted = selectHosting(ctx.dom, "monthly");
-    assert.match(hosted.card.querySelector("[data-launch-terms]").textContent, /VPS costs are billed immediately/);
+    assert.match(hosted.card.querySelector("[data-launch-terms]").textContent, /VPS plans bill immediately due to VPS provider fees/);
     assert.doesNotMatch(hosted.card.querySelector("[data-launch-terms]").textContent, /\$0 today/);
     assert.match(ctx.dom.window.document.querySelector("[data-launch-free-copy]").textContent, /hosted plan is charged in full today/i);
+    assert.match(ctx.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /VPS plans bill immediately due to VPS provider fees/);
   } finally { ctx.dom.window.close(); }
 });
 
@@ -151,6 +156,7 @@ test("combined checkout retries with the same versioned attempt id and separates
     assert.equal(bodies[0].attemptId, bodies[1].attemptId);
     selectHosting(ctx.dom, "monthly", false);
     const software = cardFor(ctx.dom, "monthly");
+    assert.doesNotMatch(software.querySelector("[data-software-buy]").getAttribute("href"), /[?&]hosting=true(?:&|$)/);
     await click(ctx.dom, software.querySelector("[data-software-buy]"));
     assert.notEqual(bodies[1].attemptId, bodies[2].attemptId);
     assert.match(bodies[1].attemptId, /^[0-9a-f-]{36}$/i);
