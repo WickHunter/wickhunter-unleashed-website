@@ -178,8 +178,22 @@
     }
     document.querySelectorAll('[data-hosting-selection-status]').forEach(function (node) { node.textContent = message; });
   }
+  function launchCheckoutAttemptScope(plan, payment, referral, hosting) {
+    return plan + ':' + payment + ':' + (referral || '') + (hosting ? ':combined-hosting-v2' : ':software-v2');
+  }
+  function clearLaunchCheckoutAttempt(plan, payment, referral, hosting, expectedId) {
+    var key = launchCheckoutAttemptScope(plan, payment, referral, hosting);
+    var memory = launchAttemptMemory[key];
+    if (memory && memory.id === expectedId) delete launchAttemptMemory[key];
+    var attempts = {};
+    try { attempts = JSON.parse(localStorage.getItem(launchAttemptKey) || '{}') || {}; } catch (_) {}
+    if (attempts[key] && attempts[key].id === expectedId) {
+      delete attempts[key];
+      try { localStorage.setItem(launchAttemptKey, JSON.stringify(attempts)); } catch (_) {}
+    }
+  }
   function launchCheckoutAttemptId(plan, payment, referral, hosting) {
-    var key = plan + ':' + payment + ':' + (referral || '') + (hosting ? ':combined-hosting-v2' : ':software-v2');
+    var key = launchCheckoutAttemptScope(plan, payment, referral, hosting);
     var attempts = {};
     try {
       attempts = JSON.parse(localStorage.getItem(launchAttemptKey) || '{}') || {};
@@ -239,6 +253,8 @@
     if (status) status.textContent = 'Opening secure checkout…';
     var retryAfterSeconds = 0;
     var safeFailureMessage = '';
+    var submittedAttemptId = attemptId;
+    var submittedReferral = incomingReferral;
     var configuredTimeout = Number(document.body.getAttribute('data-launch-checkout-timeout-ms'));
     var timeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout >= 10 && configuredTimeout <= 30_000
       ? configuredTimeout : 15_000;
@@ -254,11 +270,13 @@
         // The Hub's /buy route has this same explicit fallback. A confirmed
         // referral rejection permits a distinct no-referral checkout; an
         // uncertain network result must keep its original retry identity.
+        submittedReferral = null;
+        submittedAttemptId = launchCheckoutAttemptId(plan, payment, null, hosting);
         result = await fetchJsonWithDeadline('/api/billing/checkout', {
           method: 'POST', headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ plan: plan, payment: payment,
             ...(hosting ? { hosting: true } : {}),
-            attemptId: launchCheckoutAttemptId(plan, payment, null, hosting) })
+            attemptId: submittedAttemptId })
         }, timeoutMs);
         if (result.status === 429) retryAfterSeconds = Math.max(result.retryAfterSeconds, Number(result.data && result.data.retryAfterSeconds) || 0);
       }
@@ -266,6 +284,15 @@
         var waitMinutes = Math.ceil(boundedCheckoutRetrySeconds(result) / 60);
         safeFailureMessage = 'VPS checkout is temporarily at capacity. Please try again in about ' + waitMinutes + (waitMinutes === 1 ? ' minute.' : ' minutes.');
         throw new Error('Hosted checkout capacity');
+      }
+      if (!result.ok && hosting && result.status === 410 && result.data && result.data.code === 'HOSTED_CHECKOUT_EXPIRED') {
+        clearLaunchCheckoutAttempt(plan, payment, submittedReferral, hosting, submittedAttemptId);
+        safeFailureMessage = 'Checkout expired. Click Buy to start a new checkout.';
+        throw new Error('Hosted checkout expired');
+      }
+      if (!result.ok && hosting && result.status === 409 && result.data && result.data.code === 'HOSTED_CHECKOUT_EXPIRY_PENDING') {
+        safeFailureMessage = 'Checkout expiry is still being confirmed. Please wait before clicking Buy again.';
+        throw new Error('Hosted checkout expiry is still pending');
       }
       var checkoutUrl = result.ok && result.data && result.data.ok === true ? safeStripeCheckoutUrl(result.data.url) : null;
       if (!checkoutUrl) throw new Error('Checkout did not return a Stripe URL');

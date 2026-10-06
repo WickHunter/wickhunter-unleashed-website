@@ -297,6 +297,96 @@ test("capacity after inactive-referral fallback preserves both retry identities"
   } finally { ctx.dom.window.close(); }
 });
 
+test("verified hosted expiry rotates only on the next deliberate click", async () => {
+  const bodies = [];
+  const ctx = await page({ checkout: body => {
+    bodies.push(body);
+    return bodies.length === 1
+      ? { ok: false, status: 410, headers: { get: () => null }, json: async () => ({ ok: false, code: "HOSTED_CHECKOUT_EXPIRED" }) }
+      : response({ ok: true, url: "https://checkout.stripe.com/c/pay/new-after-expiry" });
+  } });
+  try {
+    const hosted = selectHosting(ctx.dom, "monthly");
+    await click(ctx.dom, hosted.link);
+    assert.equal(bodies.length, 1, "410 does not trigger an automatic new checkout");
+    assert.deepEqual(ctx.navigations, []);
+    assert.equal(hosted.link.getAttribute("aria-disabled"), "false");
+    assert.equal(hosted.card.querySelector("[data-hosting-card-status]").textContent,
+      "Checkout expired. Click Buy to start a new checkout.");
+    const expiredId = bodies[0].attemptId;
+
+    await click(ctx.dom, hosted.link);
+    assert.equal(bodies.length, 2);
+    assert.notEqual(bodies[1].attemptId, expiredId, "a deliberate retry gets a fresh UUID");
+    assert.equal(bodies[1].hosting, true);
+    assert.equal(ctx.navigations.at(-1), "https://checkout.stripe.com/c/pay/new-after-expiry");
+  } finally { ctx.dom.window.close(); }
+});
+
+test("hosted expiry pending response keeps its attempt and asks the customer to wait", async () => {
+  const bodies = [];
+  const ctx = await page({ checkout: body => {
+    bodies.push(body);
+    return { ok: false, status: 409, headers: { get: () => null }, json: async () => ({ ok: false, code: "HOSTED_CHECKOUT_EXPIRY_PENDING" }) };
+  } });
+  try {
+    const hosted = selectHosting(ctx.dom, "yearly");
+    await click(ctx.dom, hosted.link);
+    const first = bodies[0].attemptId;
+    assert.match(hosted.card.querySelector("[data-hosting-card-status]").textContent, /expiry is still being confirmed.*wait before clicking Buy again/i);
+    assert.deepEqual(ctx.navigations, []);
+    await click(ctx.dom, hosted.link);
+    assert.equal(bodies[1].attemptId, first);
+    assert.equal(bodies.length, 2);
+  } finally { ctx.dom.window.close(); }
+});
+
+test("wrong status or expiry code never rotates a hosted attempt", async () => {
+  for (const [status, code] of [[400, "HOSTED_CHECKOUT_EXPIRED"], [410, "OTHER_CODE"], [409, "OTHER_CODE"]]) {
+    const bodies = [];
+    const ctx = await page({ checkout: body => {
+      bodies.push(body);
+      return { ok: false, status, headers: { get: () => null }, json: async () => ({ ok: false, code }) };
+    } });
+    try {
+      const hosted = selectHosting(ctx.dom, "lifetime");
+      await click(ctx.dom, hosted.link);
+      const first = bodies[0].attemptId;
+      assert.match(hosted.card.querySelector("[data-hosting-card-status]").textContent, /could not be opened/i);
+      await click(ctx.dom, hosted.link);
+      assert.equal(bodies[1].attemptId, first, `status ${status} code ${code} retains attempt`);
+      assert.deepEqual(ctx.navigations, []);
+    } finally { ctx.dom.window.close(); }
+  }
+});
+
+test("expiry after referral fallback clears only the no-referral attempt", async () => {
+  const bodies = [];
+  const ctx = await page({ ref: "?ref=REF-123", checkout: body => {
+    bodies.push(body);
+    if (bodies.length % 2 === 1) return response({ ok: false, error: "Referral discount is not active" }, false);
+    return { ok: false, status: 410, headers: { get: () => null }, json: async () => ({ ok: false, code: "HOSTED_CHECKOUT_EXPIRED" }) };
+  } });
+  try {
+    const hosted = selectHosting(ctx.dom, "monthly");
+    await click(ctx.dom, hosted.link);
+    assert.equal(bodies.length, 2);
+    assert.equal(bodies[0].referral, "REF-123");
+    assert.equal(bodies[1].referral, undefined);
+    const referralId = bodies[0].attemptId;
+    const expiredFallbackId = bodies[1].attemptId;
+    assert.notEqual(referralId, expiredFallbackId);
+    assert.deepEqual(ctx.navigations, []);
+
+    await click(ctx.dom, hosted.link);
+    assert.equal(bodies.length, 4);
+    assert.equal(bodies[2].attemptId, referralId, "the with-referral attempt remains intact");
+    assert.notEqual(bodies[3].attemptId, expiredFallbackId, "only the expired fallback gets a new ID");
+    assert.equal(bodies[3].referral, undefined);
+    assert.deepEqual(ctx.navigations, []);
+  } finally { ctx.dom.window.close(); }
+});
+
 test("an invalid checkout URL is refused and leaves the choice retryable", async () => {
   const urls = [
     "https://evil.example/pay",
