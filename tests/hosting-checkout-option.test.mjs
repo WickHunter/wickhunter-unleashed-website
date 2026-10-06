@@ -87,6 +87,29 @@ test("all three hosted choices use one immediate mixed card checkout even withou
   } finally { ctx.dom.window.close(); }
 });
 
+test("all six plan choices navigate to Stripe when opaque fragments and referrals are present", async () => {
+  for (const plan of ["monthly", "yearly", "lifetime"]) {
+    for (const hosting of [false, true]) {
+      for (const referral of [false, true]) {
+        const ref = referral ? "?ref=REF-123" : "";
+        const stripeUrl = `https://checkout.stripe.com/c/pay/${plan}-${hosting ? "vps" : "software"}#fidopaque-token`;
+        const ctx = await page({ ref, checkout: () => response({ ok: true, url: stripeUrl }) });
+        try {
+          const selected = hosting ? selectHosting(ctx.dom, plan) : { link: cardFor(ctx.dom, plan).querySelector("[data-software-buy]") };
+          await click(ctx.dom, selected.link);
+          assert.equal(ctx.navigations.at(-1), stripeUrl, `${plan} hosting=${hosting} referral=${referral}`);
+          const call = ctx.calls.filter(c => c.url === "/api/billing/checkout").at(-1);
+          const body = JSON.parse(call.init.body);
+          assert.equal(body.plan, plan);
+          assert.equal(body.payment, "card");
+          assert.equal(body.hosting, hosting ? true : undefined);
+          assert.equal(body.referral, referral ? "REF-123" : undefined);
+        } finally { ctx.dom.window.close(); }
+      }
+    }
+  }
+});
+
 test("with an active software offer, selecting VPS replaces the free-period copy with immediate full billing", async () => {
   const ctx = await page();
   try {
@@ -167,7 +190,8 @@ test("an invalid checkout URL is refused and leaves the choice retryable", async
   const urls = [
     "https://evil.example/pay",
     "https://attacker@checkout.stripe.com/c/pay/forged",
-    "https://checkout.stripe.com/c/pay/token#untrusted",
+    "http://checkout.stripe.com/c/pay/insecure",
+    "https://checkout.stripe.com:8443/c/pay/unexpected-port",
   ];
   const ctx = await page({ checkout: () => response({ ok: true, url: urls.shift() }) });
   try {

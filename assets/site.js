@@ -179,7 +179,7 @@
     try {
       var parsed = new URL(value);
       return parsed.protocol === 'https:' && parsed.hostname === 'checkout.stripe.com'
-        && !parsed.username && !parsed.password && !parsed.hash ? parsed.href : null;
+        && !parsed.username && !parsed.password && !parsed.port ? parsed.href : null;
     } catch (_) { return null; }
   }
   function navigateTo(url) {
