@@ -187,22 +187,27 @@ test('homepage referrals follow same-origin pricing links and all six checkout c
   const home = await page({ home: true, referral, extraLinks: [
     '/unleashed/?ref=DESTINATION-CODE#pricing',
     'https://outside.example/unleashed/#pricing',
-    '/unleashed/#hosting',
+    '/terms/',
   ] });
   try {
-    const pricingLinks = [...home.dom.window.document.querySelectorAll('a[href]')]
+    const publicLinks = [...home.dom.window.document.querySelectorAll('a[href]')]
       .filter(link => new URL(link.href).origin === home.dom.window.location.origin
-        && new URL(link.href).pathname === '/unleashed/' && new URL(link.href).hash === '#pricing'
+        && ['/', '/unleashed/'].includes(new URL(link.href).pathname)
         && !link.classList.contains('fixture'));
-    assert.ok(pricingLinks.length >= 8);
-    for (const link of pricingLinks) {
+    assert.ok(publicLinks.some(link => new URL(link.href).hash === '#bots'));
+    assert.ok(publicLinks.some(link => new URL(link.href).hash === '#hedge'));
+    assert.ok(publicLinks.some(link => new URL(link.href).hash === '#hosting'));
+    assert.ok(publicLinks.some(link => new URL(link.href).hash === '#pricing'));
+    assert.ok(publicLinks.some(link => new URL(link.href).pathname === '/unleashed/' && !new URL(link.href).hash));
+    assert.ok(publicLinks.some(link => new URL(link.href).pathname === '/' && link.classList.contains('home-brand')));
+    for (const link of publicLinks) {
       const target = new URL(link.href);
       assert.equal(target.searchParams.get('ref'), referral);
     }
-    const [explicit, external, unrelated] = [...home.dom.window.document.querySelectorAll('body > a.fixture')];
+    const [explicit, external, legal] = [...home.dom.window.document.querySelectorAll('body > a.fixture')];
     assert.equal(new URL(explicit.href).searchParams.get('ref'), 'DESTINATION-CODE');
     assert.equal(external.href, 'https://outside.example/unleashed/#pricing');
-    assert.equal(unrelated.href, 'https://wickhunterunleashed.com/unleashed/#hosting');
+    assert.equal(legal.href, 'https://wickhunterunleashed.com/terms/');
   } finally { home.dom.window.close(); }
 
   const submitted = [];
@@ -233,20 +238,33 @@ test('homepage referrals follow same-origin pricing links and all six checkout c
     ['yearly', false, referral], ['yearly', true, referral],
     ['lifetime', false, referral], ['lifetime', true, referral],
   ]);
+
+  const product = await page({ referral });
+  try {
+    const brand = product.dom.window.document.querySelector('a.brand');
+    assert.ok(brand);
+    assert.equal(new URL(brand.href).pathname, '/');
+    assert.equal(new URL(brand.href).searchParams.get('ref'), referral);
+  } finally { product.dom.window.close(); }
 });
 
 test('without an incoming referral public links remain unchanged', async () => {
-  const home = await page({ home: true, extraLinks: ['/unleashed/?ref=EXPLICIT#pricing', 'https://outside.example/unleashed/#pricing'] });
+  const home = await page({ home: true, extraLinks: ['/unleashed/?ref=EXPLICIT#pricing', 'https://outside.example/unleashed/#pricing', '/billing', '/customer'] });
   try {
-    const pricing = [...home.dom.window.document.querySelectorAll('a[href]')]
+    const publicLinks = [...home.dom.window.document.querySelectorAll('a[href]')]
       .filter(link => new URL(link.href).origin === home.dom.window.location.origin
-        && new URL(link.href).pathname === '/unleashed/' && new URL(link.href).hash === '#pricing'
+        && ['/', '/unleashed/'].includes(new URL(link.href).pathname)
         && !link.classList.contains('fixture'));
-    assert.ok(pricing.length >= 8);
-    for (const link of pricing) assert.equal(new URL(link.href).searchParams.has('ref'), false);
-    const [explicit, external] = [...home.dom.window.document.querySelectorAll('body > a.fixture')];
+    assert.ok(publicLinks.some(link => new URL(link.href).hash === '#bots'));
+    assert.ok(publicLinks.some(link => new URL(link.href).hash === '#hedge'));
+    assert.ok(publicLinks.some(link => new URL(link.href).hash === '#hosting'));
+    assert.ok(publicLinks.some(link => new URL(link.href).hash === '#pricing'));
+    for (const link of publicLinks) assert.equal(new URL(link.href).searchParams.has('ref'), false);
+    const [explicit, external, billing, login] = [...home.dom.window.document.querySelectorAll('body > a.fixture')];
     assert.equal(new URL(explicit.href).searchParams.get('ref'), 'EXPLICIT');
     assert.equal(external.href, 'https://outside.example/unleashed/#pricing');
+    assert.equal(billing.href, 'https://wickhunterunleashed.com/billing');
+    assert.equal(login.href, 'https://wickhunterunleashed.com/customer');
   } finally { home.dom.window.close(); }
 });
 

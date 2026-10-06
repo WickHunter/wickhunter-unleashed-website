@@ -59,16 +59,16 @@
       if (target.origin !== window.location.origin) return href;
       var path = target.pathname.replace(/\/+$/, '') || '/';
       var isHubBuy = path === '/buy';
-      var isPricingNavigation = path === '/unleashed' && target.hash === '#pricing';
-      if ((!isHubBuy && !isPricingNavigation) || target.searchParams.has('ref')) return href;
+      var isPublicPageNavigation = path === '/' || path === '/unleashed';
+      if ((!isHubBuy && !isPublicPageNavigation) || target.searchParams.has('ref')) return href;
       target.searchParams.set('ref', incomingReferral);
       return target.pathname + target.search + target.hash;
     } catch (_) { return href; }
   }
-  // Carry an explicitly supplied referral through the homepage's same-origin
-  // pricing links. The pricing page then carries it to the Hub checkout. Do
-  // not rewrite unrelated routes or external links, and keep any ref already
-  // present on the destination link authoritative.
+  // Carry an explicitly supplied referral through the public homepage and
+  // product-page navigation, then to Hub checkout. Do not rewrite unrelated
+  // routes or external links, and keep any ref already present on the
+  // destination link authoritative.
   if (incomingReferral) {
     document.querySelectorAll('a[href]').forEach(function (link) {
       var original = link.getAttribute('href');
