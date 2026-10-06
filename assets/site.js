@@ -53,7 +53,28 @@
   var incomingReferral = new URLSearchParams(window.location.search).get('ref');
   if (!incomingReferral || incomingReferral.length > 128) incomingReferral = null;
   function withReferral(href) {
-    return incomingReferral ? href + '&ref=' + encodeURIComponent(incomingReferral) : href;
+    if (!incomingReferral || typeof href !== 'string') return href;
+    try {
+      var target = new URL(href, window.location.href);
+      if (target.origin !== window.location.origin) return href;
+      var path = target.pathname.replace(/\/+$/, '') || '/';
+      var isHubBuy = path === '/buy';
+      var isPricingNavigation = path === '/unleashed' && target.hash === '#pricing';
+      if ((!isHubBuy && !isPricingNavigation) || target.searchParams.has('ref')) return href;
+      target.searchParams.set('ref', incomingReferral);
+      return target.pathname + target.search + target.hash;
+    } catch (_) { return href; }
+  }
+  // Carry an explicitly supplied referral through the homepage's same-origin
+  // pricing links. The pricing page then carries it to the Hub checkout. Do
+  // not rewrite unrelated routes or external links, and keep any ref already
+  // present on the destination link authoritative.
+  if (incomingReferral) {
+    document.querySelectorAll('a[href]').forEach(function (link) {
+      var original = link.getAttribute('href');
+      var updated = withReferral(original);
+      if (updated !== original) link.setAttribute('href', updated);
+    });
   }
   function launchActive() {
     return !!(launchOffer && Date.now() < launchOffer.redeemUntilMs);

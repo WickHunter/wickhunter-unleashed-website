@@ -26,8 +26,15 @@ const hosting = { ok: true, purchasable: true, priceIsProposed: false, combinedC
   monthlyPriceLabel: '$20.00', planLabel: 'Private VPS', regions: [{ label: 'Japan' }],
   managedBackupsIncluded: false, maximumConnectedAccounts: 5 };
 
-async function page({ now = prelaunch, billing = plans(), checkout = () => response(null, false), referral = null, home = false } = {}) {
+async function page({ now = prelaunch, billing = plans(), checkout = () => response(null, false), referral = null, home = false, extraLinks = [] } = {}) {
   const dom = new JSDOM(home ? homeHtml : html, { url: 'https://wickhunterunleashed.com/' + (home ? '' : 'unleashed/') + (referral ? '?ref=' + encodeURIComponent(referral) : ''), runScripts: 'outside-only' });
+  for (const href of extraLinks) {
+    const link = dom.window.document.createElement('a');
+    link.href = href;
+    link.className = 'fixture';
+    link.textContent = 'fixture';
+    dom.window.document.body.append(link);
+  }
   const calls = [], navigations = [];
   let counter = 0;
   dom.window.Date.now = () => now;
@@ -173,6 +180,74 @@ test('a landing-page referral follows the card and crypto checkout paths without
     assert.equal(seen[0].referral, 'ALPHA2026');
     assert.equal(seen[0].payment, 'crypto');
   } finally { ctx.dom.window.close(); }
+});
+
+test('homepage referrals follow same-origin pricing links and all six checkout choices', async () => {
+  const referral = 'HOME-REF-2026';
+  const home = await page({ home: true, referral, extraLinks: [
+    '/unleashed/?ref=DESTINATION-CODE#pricing',
+    'https://outside.example/unleashed/#pricing',
+    '/unleashed/#hosting',
+  ] });
+  try {
+    const pricingLinks = [...home.dom.window.document.querySelectorAll('a[href]')]
+      .filter(link => new URL(link.href).origin === home.dom.window.location.origin
+        && new URL(link.href).pathname === '/unleashed/' && new URL(link.href).hash === '#pricing'
+        && !link.classList.contains('fixture'));
+    assert.ok(pricingLinks.length >= 8);
+    for (const link of pricingLinks) {
+      const target = new URL(link.href);
+      assert.equal(target.searchParams.get('ref'), referral);
+    }
+    const [explicit, external, unrelated] = [...home.dom.window.document.querySelectorAll('body > a.fixture')];
+    assert.equal(new URL(explicit.href).searchParams.get('ref'), 'DESTINATION-CODE');
+    assert.equal(external.href, 'https://outside.example/unleashed/#pricing');
+    assert.equal(unrelated.href, 'https://wickhunterunleashed.com/unleashed/#hosting');
+  } finally { home.dom.window.close(); }
+
+  const submitted = [];
+  for (const plan of ['monthly', 'yearly', 'lifetime']) {
+    for (const hostingSelected of [false, true]) {
+      const pricing = await page({ referral, checkout: body => {
+        submitted.push(body);
+        return response({ ok: true, url: 'https://checkout.stripe.com/c/pay/home-referral' });
+      } });
+      try {
+        const item = card(pricing.dom, plan);
+        const checkbox = item.querySelector('[data-hosting-select]');
+        assert.equal(checkbox.disabled, false);
+        checkbox.checked = hostingSelected;
+        checkbox.dispatchEvent(new pricing.dom.window.Event('change', { bubbles: true }));
+        const link = item.querySelector('[data-software-buy]');
+        const target = new URL(link.href);
+        assert.equal(target.searchParams.get('ref'), referral);
+        assert.equal(target.searchParams.get('hosting'), hostingSelected ? 'true' : null);
+        click(pricing.dom, link);
+        await settle();
+      } finally { pricing.dom.window.close(); }
+    }
+  }
+  assert.equal(submitted.length, 6);
+  assert.deepEqual(submitted.map(body => [body.plan, body.hosting === true, body.referral]), [
+    ['monthly', false, referral], ['monthly', true, referral],
+    ['yearly', false, referral], ['yearly', true, referral],
+    ['lifetime', false, referral], ['lifetime', true, referral],
+  ]);
+});
+
+test('without an incoming referral public links remain unchanged', async () => {
+  const home = await page({ home: true, extraLinks: ['/unleashed/?ref=EXPLICIT#pricing', 'https://outside.example/unleashed/#pricing'] });
+  try {
+    const pricing = [...home.dom.window.document.querySelectorAll('a[href]')]
+      .filter(link => new URL(link.href).origin === home.dom.window.location.origin
+        && new URL(link.href).pathname === '/unleashed/' && new URL(link.href).hash === '#pricing'
+        && !link.classList.contains('fixture'));
+    assert.ok(pricing.length >= 8);
+    for (const link of pricing) assert.equal(new URL(link.href).searchParams.has('ref'), false);
+    const [explicit, external] = [...home.dom.window.document.querySelectorAll('body > a.fixture')];
+    assert.equal(new URL(explicit.href).searchParams.get('ref'), 'EXPLICIT');
+    assert.equal(external.href, 'https://outside.example/unleashed/#pricing');
+  } finally { home.dom.window.close(); }
 });
 
 test('only a confirmed inactive referral falls back to a separate no-referral checkout attempt', async () => {
