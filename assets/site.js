@@ -250,11 +250,6 @@
           ...(incomingReferral ? { referral: incomingReferral } : {}) })
       }, timeoutMs);
       if (result.status === 429) retryAfterSeconds = Math.max(result.retryAfterSeconds, Number(result.data && result.data.retryAfterSeconds) || 0);
-      if (!result.ok && hosting && result.status === 503 && result.data && result.data.code === 'HOSTED_CHECKOUT_CAPACITY') {
-        var waitMinutes = Math.ceil(boundedCheckoutRetrySeconds(result) / 60);
-        safeFailureMessage = 'VPS checkout is temporarily at capacity. Please try again in about ' + waitMinutes + (waitMinutes === 1 ? ' minute.' : ' minutes.');
-        throw new Error('Hosted checkout capacity');
-      }
       if (!result.ok && incomingReferral && result.data?.error === 'Referral discount is not active') {
         // The Hub's /buy route has this same explicit fallback. A confirmed
         // referral rejection permits a distinct no-referral checkout; an
@@ -266,6 +261,11 @@
             attemptId: launchCheckoutAttemptId(plan, payment, null, hosting) })
         }, timeoutMs);
         if (result.status === 429) retryAfterSeconds = Math.max(result.retryAfterSeconds, Number(result.data && result.data.retryAfterSeconds) || 0);
+      }
+      if (!result.ok && hosting && result.status === 503 && result.data && result.data.code === 'HOSTED_CHECKOUT_CAPACITY') {
+        var waitMinutes = Math.ceil(boundedCheckoutRetrySeconds(result) / 60);
+        safeFailureMessage = 'VPS checkout is temporarily at capacity. Please try again in about ' + waitMinutes + (waitMinutes === 1 ? ' minute.' : ' minutes.');
+        throw new Error('Hosted checkout capacity');
       }
       var checkoutUrl = result.ok && result.data && result.data.ok === true ? safeStripeCheckoutUrl(result.data.url) : null;
       if (!checkoutUrl) throw new Error('Checkout did not return a Stripe URL');

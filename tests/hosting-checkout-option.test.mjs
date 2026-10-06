@@ -261,6 +261,42 @@ test("hosted checkout capacity retry delay is bounded", async () => {
   } finally { ctx.dom.window.close(); }
 });
 
+test("capacity after inactive-referral fallback preserves both retry identities", async () => {
+  const bodies = [];
+  const ctx = await page({ ref: "?ref=REF-123", checkout: body => {
+    bodies.push(body);
+    if (bodies.length === 1 || bodies.length === 3) return response({ ok: false, error: "Referral discount is not active" }, false);
+    if (bodies.length === 2) return {
+      ok: false, status: 503, headers: { get: name => name === "retry-after" ? "60" : null },
+      json: async () => ({ ok: false, code: "HOSTED_CHECKOUT_CAPACITY", retryAfterSeconds: 60,
+        error: "private VPS diagnostic" }),
+    };
+    return response({ ok: true, url: "https://checkout.stripe.com/c/pay/retried-after-capacity" });
+  } });
+  try {
+    const hosted = selectHosting(ctx.dom, "yearly");
+    await click(ctx.dom, hosted.link);
+    assert.equal(bodies.length, 2);
+    assert.equal(bodies[0].referral, "REF-123");
+    assert.equal(bodies[1].referral, undefined);
+    assert.equal(bodies[0].hosting, true);
+    assert.equal(bodies[1].hosting, true);
+    assert.notEqual(bodies[0].attemptId, bodies[1].attemptId);
+    assert.deepEqual(ctx.navigations, []);
+    assert.equal(hosted.link.getAttribute("aria-disabled"), "false");
+    assert.match(hosted.card.querySelector("[data-hosting-card-status]").textContent, /temporarily at capacity.*1 minute/);
+    assert.doesNotMatch(hosted.card.querySelector("[data-hosting-card-status]").textContent, /private VPS diagnostic/);
+
+    await click(ctx.dom, hosted.link);
+    assert.equal(bodies.length, 4);
+    assert.equal(bodies[2].referral, "REF-123");
+    assert.equal(bodies[3].referral, undefined);
+    assert.equal(bodies[0].attemptId, bodies[2].attemptId, "referred attempt identity survives retry");
+    assert.equal(bodies[1].attemptId, bodies[3].attemptId, "no-referral fallback identity survives retry");
+    assert.deepEqual(ctx.navigations, ["https://checkout.stripe.com/c/pay/retried-after-capacity"]);
+  } finally { ctx.dom.window.close(); }
+});
+
 test("an invalid checkout URL is refused and leaves the choice retryable", async () => {
   const urls = [
     "https://evil.example/pay",
