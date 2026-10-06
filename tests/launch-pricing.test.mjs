@@ -6,6 +6,7 @@ import { JSDOM } from 'jsdom';
 const html = readFileSync(new URL('../unleashed/index.html', import.meta.url), 'utf8');
 const homeHtml = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const script = readFileSync(new URL('../assets/site.js', import.meta.url), 'utf8');
+const checkoutEndpoint = 'https://hub.wickhunterunleashed.com/api/billing/checkout';
 const firstPayment = Date.parse('2026-10-15T00:00:00-04:00');
 const redeemUntil = Date.parse('2026-10-16T00:00:00-04:00');
 const prelaunch = Date.parse('2026-09-30T12:00:00-04:00');
@@ -283,6 +284,10 @@ test('only a confirmed inactive referral falls back to a separate no-referral ch
     assert.equal(seen[0].referral, 'OLD-CODE');
     assert.equal(seen[1].referral, undefined);
     assert.notEqual(seen[0].attemptId, seen[1].attemptId);
+    const checkoutCalls = ctx.calls.filter(call => call.url === checkoutEndpoint);
+    assert.equal(checkoutCalls.length, 2);
+    assert.ok(checkoutCalls.every(call => call.init.mode === 'cors' && call.init.credentials === 'omit'));
+    assert.equal(ctx.calls.some(call => call.url === '/api/billing/checkout'), false, 'neither request uses the Netlify proxy');
     assert.deepEqual(ctx.navigations, ['https://checkout.stripe.com/c/pay/launch-only']);
   } finally { ctx.dom.window.close(); }
 });

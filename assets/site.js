@@ -276,12 +276,16 @@
     var safeFailureMessage = '';
     var submittedAttemptId = attemptId;
     var submittedReferral = incomingReferral;
+    // Keep checkout out of the Netlify rewrite: it must reach the Hub over
+    // CORS directly so rate limits can use the buyer's request IP.
+    var checkoutEndpoint = 'https://hub.wickhunterunleashed.com/api/billing/checkout';
     var configuredTimeout = Number(document.body.getAttribute('data-launch-checkout-timeout-ms'));
     var timeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout >= 10 && configuredTimeout <= 30_000
       ? configuredTimeout : 15_000;
     try {
-      var result = await fetchJsonWithDeadline('/api/billing/checkout', {
+      var result = await fetchJsonWithDeadline(checkoutEndpoint, {
         method: 'POST', headers: { 'content-type': 'application/json' },
+        mode: 'cors', credentials: 'omit',
         body: JSON.stringify({ plan: plan, payment: payment, attemptId: attemptId,
           ...(hosting ? { hosting: true } : {}),
           ...(incomingReferral ? { referral: incomingReferral } : {}) })
@@ -293,8 +297,9 @@
         // uncertain network result must keep its original retry identity.
         submittedReferral = null;
         submittedAttemptId = launchCheckoutAttemptId(plan, payment, null, hosting);
-        result = await fetchJsonWithDeadline('/api/billing/checkout', {
+        result = await fetchJsonWithDeadline(checkoutEndpoint, {
           method: 'POST', headers: { 'content-type': 'application/json' },
+          mode: 'cors', credentials: 'omit',
           body: JSON.stringify({ plan: plan, payment: payment,
             ...(hosting ? { hosting: true } : {}),
             attemptId: submittedAttemptId })

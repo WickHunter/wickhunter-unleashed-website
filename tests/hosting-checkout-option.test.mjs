@@ -4,6 +4,7 @@ import test from "node:test";
 import { JSDOM } from "jsdom";
 
 const siteJs = readFileSync(new URL("../assets/site.js", import.meta.url), "utf8");
+const checkoutEndpoint = "https://hub.wickhunterunleashed.com/api/billing/checkout";
 const options = {
   ok: true, purchasable: true, priceIsProposed: false, combinedCheckoutEnabled: true,
   bundleEnabled: false, monthlyPriceLabel: "$20.00", planLabel: "Private VPS",
@@ -39,7 +40,7 @@ async function page({ offer = billing, hosting = options, ref = "", checkout = n
       return response(hosting);
     }
     if (String(url).includes("/api/billing/plans")) return billingResponse || response(offer);
-    if (String(url) === "/api/billing/checkout") return checkout ? checkout(JSON.parse(init.body), call) : response({ ok: true, url: "https://checkout.stripe.com/c/pay/six-plan" });
+    if (String(url) === checkoutEndpoint) return checkout ? checkout(JSON.parse(init.body), call) : response({ ok: true, url: "https://checkout.stripe.com/c/pay/six-plan" });
     return response({ ok: true });
   };
   dom.window.eval(siteJs);
@@ -82,12 +83,15 @@ test("all three hosted choices use one immediate mixed card checkout even withou
       assert.match(chosen.link.getAttribute("href"), /[?&]ref=REF-123(?:&|$)/);
       assert.equal(chosen.card.querySelector("[data-crypto-buy]")?.hidden ?? true, true, "mixed hosting has no crypto checkout");
       await click(ctx.dom, chosen.link);
-      const call = ctx.calls.filter(c => c.url === "/api/billing/checkout").at(-1);
+      const call = ctx.calls.filter(c => c.url === checkoutEndpoint).at(-1);
       assert.ok(call);
       const body = JSON.parse(call.init.body);
       assert.deepEqual({ plan: body.plan, payment: body.payment, hosting: body.hosting, referral: body.referral },
         { plan, payment: "card", hosting: true, referral: "REF-123" });
       assert.match(body.attemptId, /^[0-9a-f-]{36}$/i);
+      assert.equal(call.init.mode, "cors");
+      assert.equal(call.init.credentials, "omit");
+      assert.equal(ctx.calls.some(c => c.url === "/api/billing/checkout"), false, "checkout bypasses the Netlify rewrite");
       assert.equal(ctx.navigations.at(-1), "https://checkout.stripe.com/c/pay/six-plan");
     }
     assert.equal(ctx.calls.some(c => c.url.includes("/api/hosting/bundle-checkout")), false);
@@ -105,7 +109,7 @@ test("all six plan choices navigate to Stripe when opaque fragments and referral
           const selected = hosting ? selectHosting(ctx.dom, plan) : { link: cardFor(ctx.dom, plan).querySelector("[data-software-buy]") };
           await click(ctx.dom, selected.link);
           assert.equal(ctx.navigations.at(-1), stripeUrl, `${plan} hosting=${hosting} referral=${referral}`);
-          const call = ctx.calls.filter(c => c.url === "/api/billing/checkout").at(-1);
+          const call = ctx.calls.filter(c => c.url === checkoutEndpoint).at(-1);
           const body = JSON.parse(call.init.body);
           assert.equal(body.plan, plan);
           assert.equal(body.payment, "card");
@@ -134,7 +138,7 @@ test("software-only launch preserves the Oct 15 software date and normal crypto 
     const monthly = cardFor(ctx.dom, "monthly");
     assert.match(monthly.querySelector("[data-launch-terms]").textContent, /\$0 today; first monthly charge on Oct 15/);
     await click(ctx.dom, monthly.querySelector("[data-software-buy]"));
-    const body = JSON.parse(ctx.calls.filter(c => c.url === "/api/billing/checkout").at(-1).init.body);
+    const body = JSON.parse(ctx.calls.filter(c => c.url === checkoutEndpoint).at(-1).init.body);
     assert.equal(body.hosting, undefined);
     assert.equal(body.plan, "monthly");
     assert.equal(body.payment, "card");
@@ -142,7 +146,7 @@ test("software-only launch preserves the Oct 15 software date and normal crypto 
     const yearly = cardFor(ctx.dom, "yearly");
     assert.equal(yearly.querySelector("[data-crypto-buy]").hidden, false);
     await click(ctx.dom, yearly.querySelector("[data-crypto-buy]"));
-    const cryptoBody = JSON.parse(ctx.calls.filter(c => c.url === "/api/billing/checkout").at(-1).init.body);
+    const cryptoBody = JSON.parse(ctx.calls.filter(c => c.url === checkoutEndpoint).at(-1).init.body);
     assert.equal(cryptoBody.payment, "crypto");
     assert.equal(cryptoBody.hosting, undefined);
   } finally { ctx.dom.window.close(); }
@@ -423,6 +427,10 @@ test("a confirmed invalid referral retries without referral but preserves the VP
     assert.equal(bodies[1].referral, undefined);
     assert.equal(bodies[1].hosting, true);
     assert.notEqual(bodies[0].attemptId, bodies[1].attemptId);
+    const checkoutCalls = ctx.calls.filter(c => c.url === checkoutEndpoint);
+    assert.equal(checkoutCalls.length, 2);
+    assert.ok(checkoutCalls.every(c => c.init.mode === "cors" && c.init.credentials === "omit"), "both referral attempts use anonymous cross-origin CORS");
+    assert.equal(ctx.calls.some(c => c.url === "/api/billing/checkout"), false, "neither attempt uses the Netlify proxy");
     assert.equal(ctx.navigations.at(-1), "https://checkout.stripe.com/c/pay/no-ref");
   } finally { ctx.dom.window.close(); }
 });
