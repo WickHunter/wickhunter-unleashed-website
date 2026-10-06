@@ -21,7 +21,8 @@ const billing = {
 };
 const response = (body, ok = true) => ({ ok, status: ok ? 200 : 400, headers: { get: () => null }, json: async () => body });
 const settle = async () => { await new Promise(setImmediate); await new Promise(setImmediate); };
-async function page({ offer = billing, hosting = options, ref = "", checkout = null, orderDelay = 0 } = {}) {
+async function page({ offer = billing, hosting = options, ref = "", checkout = null, orderDelay = 0,
+  billingResponse = null, hostingResponse = null } = {}) {
   const html = readFileSync(new URL("../unleashed/index.html", import.meta.url), "utf8");
   const dom = new JSDOM(html, { url: `https://wickhunterunleashed.com/unleashed/${ref}`, runScripts: "outside-only" });
   dom.window.Date.now = () => Date.parse("2026-10-01T12:00:00Z");
@@ -33,10 +34,11 @@ async function page({ offer = billing, hosting = options, ref = "", checkout = n
     const call = { url: String(url), init };
     calls.push(call);
     if (String(url).includes("/api/hosting/options")) {
+      if (hostingResponse) return hostingResponse;
       if (orderDelay) await new Promise(resolve => setTimeout(resolve, orderDelay));
       return response(hosting);
     }
-    if (String(url).includes("/api/billing/plans")) return response(offer);
+    if (String(url).includes("/api/billing/plans")) return billingResponse || response(offer);
     if (String(url) === "/api/billing/checkout") return checkout ? checkout(JSON.parse(init.body), call) : response({ ok: true, url: "https://checkout.stripe.com/c/pay/six-plan" });
     return response({ ok: true });
   };
@@ -45,6 +47,11 @@ async function page({ offer = billing, hosting = options, ref = "", checkout = n
   return { dom, calls, navigations };
 }
 function cardFor(dom, plan) { return dom.window.document.querySelector(`.pricing-card[data-plan="${plan}"]`); }
+function deferred() {
+  let resolve;
+  const promise = new Promise(done => { resolve = done; });
+  return { promise, resolve };
+}
 function selectHosting(dom, plan, selected = true) {
   const card = cardFor(dom, plan), box = card.querySelector("[data-hosting-select]");
   box.checked = selected;
@@ -157,12 +164,33 @@ test("hosting remains disabled unless launch and options endpoints both confirm 
 });
 
 test("readiness works whichever endpoint responds first", async () => {
-  const ctx = await page({ orderDelay: 10 });
+  for (const first of ["billing", "hosting"]) {
+    const plans = deferred(), optionsResponse = deferred();
+    const ctx = await page({ billingResponse: plans.promise, hostingResponse: optionsResponse.promise });
+    try {
+      const resolveFirst = () => first === "billing" ? plans.resolve(response(billing)) : optionsResponse.resolve(response(options));
+      const resolveSecond = () => first === "billing" ? optionsResponse.resolve(response(options)) : plans.resolve(response(billing));
+      resolveFirst();
+      await settle();
+      resolveSecond();
+      await settle();
+      assert.ok([...ctx.dom.window.document.querySelectorAll("[data-hosting-select]")].every(box => !box.disabled));
+      assert.match(ctx.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /^Available ·/);
+    } finally { ctx.dom.window.close(); }
+  }
+});
+
+test("unavailable and test-mode hosting readiness show truthful global reasons", async () => {
+  const noHost = await page({ hosting: { ...options, purchasable: false } });
   try {
-    await new Promise(resolve => setTimeout(resolve, 20));
-    await settle();
-    assert.ok([...ctx.dom.window.document.querySelectorAll("[data-hosting-select]")].every(box => !box.disabled));
-  } finally { ctx.dom.window.close(); }
+    assert.match(noHost.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /not available for purchase yet/i);
+  } finally { noHost.dom.window.close(); }
+
+  const testMode = await page({ offer: { ...billing, mode: "test" } });
+  try {
+    assert.match(testMode.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /billing is in test mode/i);
+    assert.ok([...testMode.dom.window.document.querySelectorAll("[data-hosting-select]")].every(box => box.disabled));
+  } finally { testMode.dom.window.close(); }
 });
 
 test("combined checkout retries with the same versioned attempt id and separates software identity", async () => {

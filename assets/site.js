@@ -48,6 +48,8 @@
   var cryptoPlans = {};
   var checkoutMode = 'unknown';
   var hostingCheckoutEnabled = false;
+  var hostingOptionsState = 'pending';
+  var hostingAvailabilityMessage = null;
   var incomingReferral = new URLSearchParams(window.location.search).get('ref');
   if (!incomingReferral || incomingReferral.length > 128) incomingReferral = null;
   function withReferral(href) {
@@ -159,6 +161,15 @@
       if (checkbox.disabled) checkbox.checked = false;
     });
     renderPlanCards();
+    var message = hostingAvailabilityMessage;
+    if (!message) {
+      if (hostingCheckoutEnabled) message = 'Available · VPS plans bill immediately due to VPS provider fees.';
+      else if (checkoutMode === 'test') message = 'Combined hosting checkout is unavailable while billing is in test mode.';
+      else if (checkoutMode === 'unavailable') message = 'Checkout availability could not be confirmed. Try again later.';
+      else if (hostingOptionsState === 'pending' || checkoutMode === 'unknown') message = 'Checking combined VPS checkout availability…';
+      else message = 'Combined software + VPS checkout is not available yet.';
+    }
+    document.querySelectorAll('[data-hosting-selection-status]').forEach(function (node) { node.textContent = message; });
   }
   function launchCheckoutAttemptId(plan, payment, referral, hosting) {
     var key = plan + ':' + payment + ':' + (referral || '') + (hosting ? ':combined-hosting-v2' : ':software-v2');
@@ -287,7 +298,7 @@
     fetch(hub.replace(/\/+$/, '') + '/api/billing/plans', { mode: 'cors' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (data) {
-        if (!data || data.ok !== true || !Array.isArray(data.plans)) { checkoutMode = 'unavailable'; renderPlanCards(); return; }
+        if (!data || data.ok !== true || !Array.isArray(data.plans)) { checkoutMode = 'unavailable'; refreshHostingCheckoutReadiness(); return; }
         checkoutMode = data.mode === 'live' ? 'live' : data.mode === 'test' ? 'test' : 'unavailable';
         var offer = data.launch;
         launchHostingReady = checkoutMode === 'live' && offer && offer.hostingCheckoutEnabled === true;
@@ -311,7 +322,7 @@
           setTimeout(renderPlanCards, Math.max(1, Math.min(launchOffer.redeemUntilMs - Date.now() + 1, 2_147_483_647)));
         }
       })
-      .catch(function () { checkoutMode = 'unavailable'; renderPlanCards(); });
+      .catch(function () { checkoutMode = 'unavailable'; refreshHostingCheckoutReadiness(); });
 
     // The public options endpoint keeps each selection disabled until the Hub
     // confirms both the advertised plan and its atomic checkout route.
@@ -319,6 +330,8 @@
       combinedHostingEnabled = false;
       hostingCheckoutEnabled = false;
       hostingMonthlyCents = 0;
+      hostingOptionsState = 'unavailable';
+      hostingAvailabilityMessage = message;
       hostingCheckboxes.forEach(function (checkbox) { checkbox.disabled = true; checkbox.checked = false; });
       renderPlanCards();
       document.querySelectorAll('[data-hosting-selection-status]').forEach(function (node) { node.textContent = message; });
@@ -358,14 +371,11 @@
           return;
         }
         combinedHostingEnabled = data.combinedCheckoutEnabled === true;
+        hostingOptionsState = 'ready';
+        hostingAvailabilityMessage = null;
         // Both sources must confirm readiness: the launch endpoint owns the
         // combined Checkout contract; hosting options own the published VPS price.
         refreshHostingCheckoutReadiness();
-        document.querySelectorAll('[data-hosting-selection-status]').forEach(function (node) {
-          node.textContent = hostingCheckoutEnabled
-              ? 'Available · VPS plans bill immediately due to VPS provider fees.'
-            : 'Combined software + VPS checkout is not available yet.';
-        });
 
         var regions = Array.isArray(data.regions)
           ? data.regions.map(function (region) { return region && region.label; }).filter(Boolean).join(' · ')
