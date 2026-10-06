@@ -110,14 +110,21 @@
     if (plan === 'monthly') caption.textContent = selected ? 'software + VPS · one monthly renewal' : 'software · renews monthly';
     if (plan === 'yearly') caption.textContent = selected ? 'software + VPS · one annual renewal' : 'software · renews annually';
     if (plan === 'lifetime') caption.textContent = selected ? 'software once · VPS billed monthly' : 'software · one payment';
-    if (status && hostingMonthlyCents > 0 && link.dataset.pending !== 'true') {
-      if (plan === 'monthly') status.textContent = selected
+    if (status && link.dataset.pending !== 'true') {
+      if (!hostingCheckoutEnabled) status.textContent = checkoutMode === 'test'
+        ? 'VPS checkout is unavailable in test mode.'
+        : checkoutMode === 'unavailable'
+          ? 'VPS checkout availability could not be confirmed.'
+          : hostingOptionsState === 'pending' || checkoutMode === 'unknown'
+            ? 'Checking VPS checkout availability…'
+            : 'VPS checkout is not available yet.';
+      else if (hostingMonthlyCents > 0 && plan === 'monthly') status.textContent = selected
         ? 'VPS plans bill immediately due to VPS provider fees. One checkout: $' + money(total) + ' due today, then monthly. Offers apply only to software.'
         : 'Add hosting for $' + money(hostingMonthlyCents) + ' per month.';
-      else if (plan === 'yearly') status.textContent = selected
+      else if (hostingMonthlyCents > 0 && plan === 'yearly') status.textContent = selected
         ? 'VPS plans bill immediately due to VPS provider fees. One checkout: $' + money(total) + ' due today, then annually. Offers apply only to software.'
         : 'Add hosting for $' + money(hostingMonthlyCents * 12) + ' per year.';
-      if (plan === 'lifetime') status.textContent = selected
+      if (hostingCheckoutEnabled && hostingMonthlyCents > 0 && plan === 'lifetime') status.textContent = selected
         ? 'VPS plans bill immediately due to VPS provider fees. $' + money(softwareCents) + ' software once + $' + money(hostingMonthlyCents) + ' VPS today, then monthly.'
         : '$' + money(softwareCents) + ' one-time software payment.';
     }

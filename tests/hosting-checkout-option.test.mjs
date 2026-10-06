@@ -123,8 +123,8 @@ test("with an active software offer, selecting VPS replaces the free-period copy
     const hosted = selectHosting(ctx.dom, "monthly");
     assert.match(hosted.card.querySelector("[data-launch-terms]").textContent, /VPS plans bill immediately due to VPS provider fees/);
     assert.doesNotMatch(hosted.card.querySelector("[data-launch-terms]").textContent, /\$0 today/);
-    assert.match(ctx.dom.window.document.querySelector("[data-launch-free-copy]").textContent, /hosted plan is charged in full today/i);
-    assert.match(ctx.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /VPS plans bill immediately due to VPS provider fees/);
+    assert.equal(ctx.dom.window.document.querySelector("[data-launch-free-copy]"), null);
+    assert.equal(ctx.dom.window.document.querySelector("[data-hosting-selection-status]"), null);
   } finally { ctx.dom.window.close(); }
 });
 
@@ -158,7 +158,7 @@ test("hosting remains disabled unless launch and options endpoints both confirm 
     const ctx = await page({ offer, hosting });
     try {
       assert.ok([...ctx.dom.window.document.querySelectorAll("[data-hosting-select]")].every(box => box.disabled));
-      assert.match(ctx.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /not available/i);
+      assert.ok([...ctx.dom.window.document.querySelectorAll("[data-hosting-card-status]")].every(node => /not available|test mode|availability/i.test(node.textContent)));
     } finally { ctx.dom.window.close(); }
   }
 });
@@ -175,21 +175,25 @@ test("readiness works whichever endpoint responds first", async () => {
       resolveSecond();
       await settle();
       assert.ok([...ctx.dom.window.document.querySelectorAll("[data-hosting-select]")].every(box => !box.disabled));
-      assert.match(ctx.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /^Available ·/);
+      assert.equal(ctx.dom.window.document.querySelector("[data-hosting-selection-status]"), null);
+      assert.match(cardFor(ctx.dom, "monthly").querySelector("[data-hosting-card-status]").textContent, /Add hosting for \$20 per month/);
     } finally { ctx.dom.window.close(); }
   }
 });
 
-test("unavailable and test-mode hosting readiness show truthful global reasons", async () => {
+test("unavailable and test-mode hosting readiness show truthful card reasons", async () => {
   const noHost = await page({ hosting: { ...options, purchasable: false } });
   try {
-    assert.match(noHost.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /not available for purchase yet/i);
+    assert.equal(noHost.dom.window.document.querySelector("[data-hosting-selection-status]"), null);
+    assert.ok([...noHost.dom.window.document.querySelectorAll("[data-hosting-select]")].every(box => box.disabled));
+    assert.ok([...noHost.dom.window.document.querySelectorAll("[data-hosting-card-status]")].every(node => /not available/i.test(node.textContent)));
   } finally { noHost.dom.window.close(); }
 
   const testMode = await page({ offer: { ...billing, mode: "test" } });
   try {
-    assert.match(testMode.dom.window.document.querySelector("[data-hosting-selection-status]").textContent, /billing is in test mode/i);
+    assert.equal(testMode.dom.window.document.querySelector("[data-hosting-selection-status]"), null);
     assert.ok([...testMode.dom.window.document.querySelectorAll("[data-hosting-select]")].every(box => box.disabled));
+    assert.ok([...testMode.dom.window.document.querySelectorAll("[data-hosting-card-status]")].every(node => /test mode/i.test(node.textContent)));
   } finally { testMode.dom.window.close(); }
 });
 

@@ -52,13 +52,12 @@ test('verified free period shows full public prices and distinguishes immediate 
   const ctx = await page();
   try {
     const { dom } = ctx;
-    assert.equal(dom.window.document.querySelector('[data-launch-offer]').hidden, false);
+    assert.equal(dom.window.document.querySelector('[data-launch-offer]'), null);
+    assert.equal(dom.window.document.querySelector('[data-hosting-selection-status]'), null);
+    assert.equal(dom.window.document.querySelector('[data-starter-announcement]'), null);
+    assert.doesNotMatch(dom.window.document.querySelector('#pricing').textContent, /Software offer through October 15|Want it ready to use|Your starting point is included/);
     assert.equal(dom.window.document.querySelector('[data-free-announcement]').hidden, false);
     assert.equal(dom.window.document.querySelector('[data-availability-announcement]').hidden, true);
-    assert.match(dom.window.document.querySelector('[data-launch-offer]').textContent, /Eligible Monthly or Yearly software is \$0 until midnight at the start of October 15/);
-    assert.match(dom.window.document.querySelector('[data-launch-free-copy]').textContent, /software-only Monthly and Yearly plans/);
-    assert.match(dom.window.document.querySelector('[data-launch-offer]').textContent, /Software offer through October 15/);
-    assert.doesNotMatch(dom.window.document.querySelector('[data-launch-offer]').textContent, /discount|promo code|25%/i);
     for (const [plan, price] of [['monthly', '99'], ['yearly', '699'], ['lifetime', '999']]) {
       const item = card(dom, plan);
       assert.equal(item.querySelector('[data-plan-price]').textContent, price);
@@ -68,6 +67,12 @@ test('verified free period shows full public prices and distinguishes immediate 
     assert.match(card(dom, 'monthly').querySelector('[data-launch-terms]').textContent, /Card required. \$0 today/);
     assert.match(card(dom, 'yearly').querySelector('[data-launch-terms]').textContent, /first yearly charge on Oct 15/);
     assert.match(card(dom, 'lifetime').querySelector('[data-launch-terms]').textContent, /One-time software payment today/);
+    const monthly = card(dom, 'monthly');
+    monthly.querySelector('[data-hosting-select]').checked = true;
+    monthly.querySelector('[data-hosting-select]').dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+    assert.match(monthly.querySelector('[data-launch-terms]').textContent, /VPS plans bill immediately due to VPS provider fees/);
+    assert.match(monthly.querySelector('[data-hosting-card-status]').textContent, /\$119 due today/);
+    assert.match(dom.window.document.querySelector('#faq').textContent, /VPS|hosting/i);
     assert.equal(card(dom, 'yearly').querySelector('[data-crypto-buy]').hidden, false);
     assert.equal(card(dom, 'lifetime').querySelector('[data-crypto-buy]').hidden, false);
   } finally { ctx.dom.window.close(); }
@@ -114,12 +119,12 @@ test('the card free period ends at midnight Oct 15 ET, and a stale offer ends at
   try {
     assert.match(card(ctx.dom, 'monthly').querySelector('[data-launch-terms]').textContent, /charge today/);
     assert.doesNotMatch(card(ctx.dom, 'monthly').querySelector('[data-launch-terms]').textContent, /\$0 today/);
-    assert.equal(ctx.dom.window.document.querySelector('[data-launch-offer]').hidden, true);
+    assert.equal(ctx.dom.window.document.querySelector('[data-launch-offer]'), null);
     assert.equal(ctx.dom.window.document.querySelector('[data-free-announcement]').hidden, true);
     ctx.setNow(redeemUntil);
     const checkbox = card(ctx.dom, 'monthly').querySelector('[data-hosting-select]');
     checkbox.dispatchEvent(new ctx.dom.window.Event('change', { bubbles: true }));
-    assert.equal(ctx.dom.window.document.querySelector('[data-launch-offer]').hidden, true);
+    assert.equal(ctx.dom.window.document.querySelector('[data-launch-offer]'), null);
     assert.equal(card(ctx.dom, 'monthly').querySelector('[data-plan-price]').textContent, '99');
     assert.equal(card(ctx.dom, 'yearly').querySelector('[data-crypto-buy]').hidden, false);
     assert.equal(card(ctx.dom, 'yearly').querySelector('[data-crypto-buy]').textContent, 'Pay $699 with crypto');
@@ -129,7 +134,7 @@ test('the card free period ends at midnight Oct 15 ET, and a stale offer ends at
 test('an inactive offer uses full prices while separately confirmed crypto availability remains visible', async () => {
   const inactive = await page({ billing: plans(false) });
   try {
-    assert.equal(inactive.dom.window.document.querySelector('[data-launch-offer]').hidden, true);
+    assert.equal(inactive.dom.window.document.querySelector('[data-launch-offer]'), null);
     assert.equal(card(inactive.dom, 'yearly').querySelector('[data-plan-price]').textContent, '699');
     assert.equal(card(inactive.dom, 'yearly').querySelector('[data-crypto-buy]').hidden, false);
     assert.equal(card(inactive.dom, 'yearly').querySelector('[data-crypto-buy]').textContent, 'Pay $699 with crypto');
@@ -138,14 +143,14 @@ test('an inactive offer uses full prices while separately confirmed crypto avail
   try {
     assert.equal(card(noCrypto.dom, 'yearly').querySelector('[data-plan-price]').textContent, '699');
     assert.equal(card(noCrypto.dom, 'yearly').querySelector('[data-crypto-buy]').hidden, true);
-    assert.equal(noCrypto.dom.window.document.querySelector('[data-launch-crypto-copy]').hidden, true);
+    assert.equal(noCrypto.dom.window.document.querySelector('[data-launch-crypto-copy]'), null);
   } finally { noCrypto.dom.window.close(); }
 });
 
 test('a Hub test-mode response never offers a public purchase or free-period claim', async () => {
   const ctx = await page({ billing: { ...plans(), mode: 'test' } });
   try {
-    assert.equal(ctx.dom.window.document.querySelector('[data-launch-offer]').hidden, true);
+    assert.equal(ctx.dom.window.document.querySelector('[data-launch-offer]'), null);
     assert.equal(card(ctx.dom, 'monthly').querySelector('[data-plan-price]').textContent, '99');
     assert.equal(card(ctx.dom, 'monthly').querySelector('[data-software-buy]').getAttribute('aria-disabled'), 'true');
     assert.equal(card(ctx.dom, 'yearly').querySelector('[data-crypto-buy]').hidden, true);
@@ -275,8 +280,13 @@ test('starter bonus follows the verified offer and disappears at its deadline', 
       const ctx = await page({ now, billing, home });
       try {
         const bonuses = [...ctx.dom.window.document.querySelectorAll('[data-starter-announcement]')];
-        assert(bonuses.length > 0, 'bonus has a verified availability hook');
-        assert(bonuses.every(node => node.hidden === !expectedVisible));
+        if (home) {
+          assert(bonuses.length > 0, 'homepage retains its verified starter offer');
+          assert(bonuses.every(node => node.hidden === !expectedVisible));
+        } else {
+          assert.equal(bonuses.length, 0, 'pricing page omits the bulky starter promo');
+          assert.doesNotMatch(ctx.dom.window.document.querySelector('#pricing').textContent, /Your starting point is included/);
+        }
         assert.doesNotMatch(ctx.dom.window.document.body.textContent, /WHVIP25|WHVIP40/);
       } finally { ctx.dom.window.close(); }
     }
