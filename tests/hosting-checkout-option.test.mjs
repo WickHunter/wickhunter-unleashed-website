@@ -196,7 +196,7 @@ test("an invalid checkout URL is refused and leaves the choice retryable", async
   const ctx = await page({ checkout: () => response({ ok: true, url: urls.shift() }) });
   try {
     const selected = selectHosting(ctx.dom, "yearly");
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 4; i++) {
       await click(ctx.dom, selected.link);
       assert.deepEqual(ctx.navigations, []);
       assert.equal(selected.link.getAttribute("aria-disabled"), "false");
