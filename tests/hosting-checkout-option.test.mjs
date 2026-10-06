@@ -218,6 +218,49 @@ test("combined checkout retries with the same versioned attempt id and separates
   } finally { ctx.dom.window.close(); }
 });
 
+test("hosted checkout capacity failure is safe, retryable, and preserves the attempt", async () => {
+  const bodies = [];
+  const ctx = await page({ ref: "?ref=REF-123", checkout: body => {
+    bodies.push(body);
+    if (bodies.length === 1) return {
+      ok: false, status: 503, headers: { get: name => name === "retry-after" ? "60" : null },
+      json: async () => ({ ok: false, code: "HOSTED_CHECKOUT_CAPACITY", retryAfterSeconds: 60,
+        error: "private provider diagnostic must never appear" }),
+    };
+    return response({ ok: true, url: "https://checkout.stripe.com/c/pay/capacity-recovered#fidopaque" });
+  } });
+  try {
+    const hosted = selectHosting(ctx.dom, "monthly");
+    await click(ctx.dom, hosted.link);
+    assert.equal(bodies.length, 1, "capacity failure does not trigger another request");
+    assert.deepEqual(ctx.navigations, [], "capacity failure does not redirect or imply payment");
+    assert.equal(hosted.link.dataset.pending, undefined);
+    assert.equal(hosted.link.getAttribute("aria-disabled"), "false");
+    assert.match(hosted.card.querySelector("[data-hosting-card-status]").textContent, /VPS checkout is temporarily at capacity.*1 minute/);
+    assert.doesNotMatch(hosted.card.querySelector("[data-hosting-card-status]").textContent, /private provider diagnostic|secret|503/);
+
+    await click(ctx.dom, hosted.link);
+    assert.equal(bodies.length, 2);
+    assert.equal(bodies[0].attemptId, bodies[1].attemptId);
+    assert.equal(bodies[0].hosting, true);
+    assert.equal(bodies[0].referral, "REF-123");
+    assert.equal(ctx.navigations.at(-1), "https://checkout.stripe.com/c/pay/capacity-recovered#fidopaque");
+  } finally { ctx.dom.window.close(); }
+});
+
+test("hosted checkout capacity retry delay is bounded", async () => {
+  const ctx = await page({ checkout: () => ({
+    ok: false, status: 503, headers: { get: name => name === "retry-after" ? "86400" : null },
+    json: async () => ({ ok: false, code: "HOSTED_CHECKOUT_CAPACITY", retryAfterSeconds: 86400 }),
+  }) });
+  try {
+    const hosted = selectHosting(ctx.dom, "yearly");
+    await click(ctx.dom, hosted.link);
+    assert.match(hosted.card.querySelector("[data-hosting-card-status]").textContent, /60 minutes/);
+    assert.deepEqual(ctx.navigations, []);
+  } finally { ctx.dom.window.close(); }
+});
+
 test("an invalid checkout URL is refused and leaves the choice retryable", async () => {
   const urls = [
     "https://evil.example/pay",

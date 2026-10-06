@@ -200,6 +200,14 @@
         && !parsed.username && !parsed.password && !parsed.port ? parsed.href : null;
     } catch (_) { return null; }
   }
+  function boundedCheckoutRetrySeconds(result) {
+    var candidates = [result && result.data && result.data.retryAfterSeconds, result && result.retryAfterSeconds];
+    for (var i = 0; i < candidates.length; i++) {
+      var seconds = Number(candidates[i]);
+      if (Number.isFinite(seconds) && seconds > 0) return Math.min(3600, Math.max(1, Math.ceil(seconds)));
+    }
+    return 60;
+  }
   function navigateTo(url) {
     var anchor = document.createElement('a');
     anchor.href = url;
@@ -230,6 +238,7 @@
     link.classList.add('disabled');
     if (status) status.textContent = 'Opening secure checkout…';
     var retryAfterSeconds = 0;
+    var safeFailureMessage = '';
     var configuredTimeout = Number(document.body.getAttribute('data-launch-checkout-timeout-ms'));
     var timeoutMs = Number.isFinite(configuredTimeout) && configuredTimeout >= 10 && configuredTimeout <= 30_000
       ? configuredTimeout : 15_000;
@@ -241,6 +250,11 @@
           ...(incomingReferral ? { referral: incomingReferral } : {}) })
       }, timeoutMs);
       if (result.status === 429) retryAfterSeconds = Math.max(result.retryAfterSeconds, Number(result.data && result.data.retryAfterSeconds) || 0);
+      if (!result.ok && hosting && result.status === 503 && result.data && result.data.code === 'HOSTED_CHECKOUT_CAPACITY') {
+        var waitMinutes = Math.ceil(boundedCheckoutRetrySeconds(result) / 60);
+        safeFailureMessage = 'VPS checkout is temporarily at capacity. Please try again in about ' + waitMinutes + (waitMinutes === 1 ? ' minute.' : ' minutes.');
+        throw new Error('Hosted checkout capacity');
+      }
       if (!result.ok && incomingReferral && result.data?.error === 'Referral discount is not active') {
         // The Hub's /buy route has this same explicit fallback. A confirmed
         // referral rejection permits a distinct no-referral checkout; an
@@ -260,9 +274,9 @@
       delete link.dataset.pending;
       link.setAttribute('aria-disabled', 'false');
       link.classList.remove('disabled');
-      if (status) status.textContent = retryAfterSeconds
+      if (status) status.textContent = safeFailureMessage || (retryAfterSeconds
         ? 'Too many checkout attempts. Please wait ' + Math.ceil(retryAfterSeconds / 60) + ' minutes before trying again. No payment was submitted.'
-        : 'Checkout could not be opened. Try again with the same checkout attempt.';
+        : 'Checkout could not be opened. Try again with the same checkout attempt.');
     }
   }
   if (hostingCheckboxes.length) {
