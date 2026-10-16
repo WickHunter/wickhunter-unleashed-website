@@ -10,10 +10,11 @@ look like one thing.
 
 ## Sales pages
 
-- `/` introduces Unleashed and Hedge Bots, using screenshots rendered from the shipped app with clearly labeled illustrative data. It keeps consulting services in the footer and directs the main action to plans.
-- `/unleashed/` explains Hedge Bots, the five bot modules, plan options, hosting, setup and exchange support. Existing Stripe checkout, referral, account and support integrations remain in `assets/site.js`.
-- The free software period and signup starter-pack panels use the Hub's verified live offer status. The free card period ends at the start of October 15; the starter signup deadline ends at the end of October 15 Eastern Time. Public pages show base prices and no private promotion code.
-- `assets/marketing.css` styles the homepage; `assets/product-marketing.css` styles the product page. Product image labels distinguish sample data from trading results. The community link uses the owner's Discord invite.
+- `/` uses the product-first redesign: real product screenshots, workflow and bot explainers, setup steps, hosting comparison, API-driven pricing, learning/support links, FAQ and customer dashboard access.
+- `/customer` redirects to the Hub's signed-in customer dashboard for licence details, a reveal/copy license-key action, billing and hosted-instance access. License keys never appear in public website files.
+- `/unleashed/` retains the detailed bot, exchange and installation information. Demo trading is advertised only for Bybit, as directed by the owner for the weekend release.
+- Retired October 15 promotions and signup incentives are removed from public HTML.
+- `assets/redesign.css` / `assets/redesign.js` handle the homepage presentation. `assets/site.js` preserves the deployed billing, referral, hosting-availability and same-origin support integration. Product screenshots use illustrative data and make no performance claims.
 
 ## Deploy on Netlify
 
@@ -55,16 +56,7 @@ sets security headers and long-lived caching for `/assets/*`.
    its $999 one-time software price and leads to a separately confirmed $20
    monthly hosting subscription.
 
-   Checked Monthly and Yearly cards POST `{plan, checkoutAttemptId}` to
-   `/api/hosting/bundle-checkout`. The browser persists one random UUID for the
-   current plan/attempt so an ambiguous response can be retried idempotently,
-   validates the returned amount/interval and an HTTPS `checkout.stripe.com`
-   URL, then navigates. The button remains disabled only while the request is
-   pending and a 15-second deadline restores retry on a hung request. The
-   checkboxes stay disabled until `/api/hosting/options` reports a final price,
-   purchasability, `maximumConnectedAccounts`, and `bundleEnabled:true`;
-   Lifetime's separate path needs the final hosting price and purchasability
-   but not the bundle flag.
+   Hosted choices use the current `/api/billing/checkout` combined contract for all three plans, with durable attempt IDs scoped to plan, payment rail, referral and hosting choice. The request goes directly to the HTTPS Hub over CORS. Both `/api/billing/plans` and `/api/hosting/options` must confirm live combined-hosting availability before the homepage hosting switch is enabled. Software-only card links retain the `/buy?plan=...` server route. Crypto is offered only for eligible software-only Yearly and Lifetime plans. Stripe destinations are restricted to HTTPS `checkout.stripe.com`; ambiguous failures retain the same attempt for retry.
 
 3. **The Hub redirect targets**, if the Hub ever moves off the bare IP
    `45.76.105.174` onto its own domain — update the two lines in
@@ -72,11 +64,7 @@ sets security headers and long-lived caching for `/assets/*`.
 
 ## Focused checkout verification
 
-Run `node --test tests/hosting-checkout-option.test.mjs`. The jsdom suite drives
-all three card selections, exact $119/month and $939/year bundle totals,
-Lifetime's separate $20/month follow-up, idempotent retry, plan changes,
-request timeout recovery, response price/interval checks, Stripe URL validation,
-and unavailable-option states without making a network request.
+Run `node --test tests/*.test.mjs` with jsdom installed. The current suites cover both sales pages, software and combined-hosting paths, crypto eligibility, referrals, totals, server-provided availability, unsafe redirects, idempotent retries, timeouts, capacity/expired-session errors, removal of retired campaigns, login links and the support frame. The fixtures model the current deployed combined checkout contract rather than the retired software-first hosting flow.
 
 ## Customer policies
 
