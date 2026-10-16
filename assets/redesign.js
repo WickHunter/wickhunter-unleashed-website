@@ -1,0 +1,28 @@
+const menu = document.querySelector('.menu-toggle');
+const nav = document.querySelector('#navigation');
+menu.addEventListener('click', () => { const expanded = menu.getAttribute('aria-expanded') !== 'true'; menu.setAttribute('aria-expanded', String(expanded)); menu.setAttribute('aria-label', expanded ? 'Close navigation' : 'Open navigation'); nav.classList.toggle('is-open', expanded); });
+nav.addEventListener('click', (event) => { if (event.target.closest('a')) { menu.setAttribute('aria-expanded','false'); menu.setAttribute('aria-label','Open navigation'); nav.classList.remove('is-open'); } });
+document.addEventListener('keydown', event => { if(event.key === 'Escape' && nav.classList.contains('is-open')) { menu.click(); menu.focus(); } });
+const bots = {
+ tv: ['Your alert starts it. Your rules manage it.', 'TradingView sends an alert to Unleashed. If the alert passes your configured checks, TV Signal opens the position and applies your saved trade-management settings.', 'You already have a TradingView signal and want one workflow for entries, additional orders, take profit and stop loss.'],
+ liq: ['Wait for liquidation activity that meets your rules.', 'Liq Scalper watches liquidation activity and market conditions. It looks for potential reversal entries that pass your configured thresholds, then manages the resulting position.', 'You want entries based on liquidation events, with your own limits for position size and trade management.'],
+ optimized: ['Adapt liquidation-entry logic to each pair.', 'Optimized Liquidation uses each market’s recent behavior to build pair-specific entry logic. You configure the bot and the trade-management rules used after entry.', 'You want to explore liquidation-based setups with entry logic that varies by pair. It does not guarantee better results.'],
+ hedge: ['Give an opposing position its own rules.', 'Hedge Bot can attach to eligible positions and open an opposing position under your configured conditions. Set how the hedge scales and how the positions exit together.', 'You want coordinated management of a main position and a hedge. Both can incur fees and losses, and need enough margin.'],
+ manual: ['Your entry. Unleashed’s management tools.', 'Manual Bot brings eligible positions you opened at the exchange into Unleashed for additional-order, take-profit and stop-loss management.', 'You prefer to choose entries yourself and want rule-based management after the position opens.']
+};
+function selectBot(key, focus = false) { if (!bots[key]) return; document.querySelectorAll('[data-bot]').forEach(tab => { const selected = tab.dataset.bot === key; tab.setAttribute('aria-selected',String(selected)); tab.tabIndex = selected ? 0 : -1; if(selected && focus) tab.focus(); }); document.querySelector('#bot-panel').setAttribute('aria-labelledby',`tab-${key}`); ['bot-title','bot-description','bot-use'].forEach((id,index) => document.getElementById(id).textContent = bots[key][index]); }
+document.querySelectorAll('[data-bot]').forEach(tab => tab.addEventListener('click', () => selectBot(tab.dataset.bot)));
+document.querySelectorAll('[data-bot-select]').forEach(link => link.addEventListener('click', () => selectBot(link.dataset.botSelect)));
+document.querySelector('.bot-tabs').addEventListener('keydown', event => { const tabs = [...document.querySelectorAll('[data-bot]')]; let i = tabs.indexOf(document.activeElement); if(i < 0) return; if (event.key === 'ArrowRight') i = (i+1)%tabs.length; else if(event.key === 'ArrowLeft') i = (i+tabs.length-1)%tabs.length; else if(event.key === 'Home') i=0; else if(event.key === 'End') i=tabs.length-1; else return; event.preventDefault(); selectBot(tabs[i].dataset.bot,true); });
+// The shared billing script owns prices, eligibility, referrals and checkout.
+const hostedRadio = document.querySelector('input[name="hosting"][value="managed"]');
+const softwareRadio = document.querySelector('input[name="hosting"][value="self"]');
+const cardHosting = [...document.querySelectorAll('[data-hosting-select]')];
+function syncHostingAvailability(){const ready=cardHosting.length===3&&cardHosting.every(input=>!input.disabled);hostedRadio.disabled=!ready;if(!ready&&hostedRadio.checked){softwareRadio.checked=true;cardHosting.forEach(input=>{input.checked=false;input.dispatchEvent(new Event('change',{bubbles:true}));});}}
+const hostingObserver=new MutationObserver(syncHostingAvailability);
+cardHosting.forEach(input=>hostingObserver.observe(input,{attributes:true,attributeFilter:['disabled']}));
+document.querySelectorAll('input[name="hosting"]').forEach(radio=>radio.addEventListener('change',()=>{const selected=hostedRadio.checked&&!hostedRadio.disabled;cardHosting.forEach(input=>{input.checked=selected;input.dispatchEvent(new Event('change',{bubbles:true}));});}));
+syncHostingAvailability();
+const imageDialog=document.querySelector('#image-dialog');
+document.querySelectorAll('[data-image]').forEach(button=>button.addEventListener('click',()=> {document.querySelector('#enlarged-image').src=button.dataset.image;document.querySelector('#enlarged-image').alt=button.dataset.caption;document.querySelector('#image-caption').textContent=button.dataset.caption;imageDialog.showModal();}));
+document.querySelectorAll('dialog').forEach(dialog=> {dialog.querySelectorAll('.dialog-close,.dialog-dismiss').forEach(button=>button.addEventListener('click',()=>dialog.close()));dialog.addEventListener('click',event=>{if(event.target===dialog){const rect=dialog.getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)dialog.close();}});});
