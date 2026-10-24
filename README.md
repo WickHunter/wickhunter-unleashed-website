@@ -12,7 +12,7 @@ look like one thing.
 
 - `/` uses the product-first redesign: real product screenshots, workflow and bot explainers, setup steps, hosting comparison, API-driven pricing, learning/support links, FAQ and customer dashboard access.
 - `/customer` redirects to the Hub's signed-in customer dashboard for licence details, a reveal/copy license-key action, billing and hosted-instance access. License keys never appear in public website files.
-- `/unleashed/` retains the detailed bot, exchange and installation information. Demo trading is advertised only for Bybit, as directed by the owner for the weekend release.
+- `/unleashed/` retains the detailed bot, exchange and installation information. Demo trading is not offered in the current release (owner decision 2026-10-24) for the weekend release.
 - Retired October 15 promotions and signup incentives are removed from public HTML.
 - `assets/redesign.css` / `assets/redesign.js` handle the homepage presentation. `assets/site.js` preserves the deployed billing, referral, hosting-availability and same-origin support integration. Product screenshots use illustrative data and make no performance claims.
 
