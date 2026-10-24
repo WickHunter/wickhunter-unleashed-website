@@ -12,9 +12,13 @@ look like one thing.
 
 - `/` uses the product-first redesign: real product screenshots, workflow and bot explainers, setup steps, hosting comparison, API-driven pricing, learning/support links, FAQ and customer dashboard access.
 - `/customer` redirects to the Hub's signed-in customer dashboard for licence details, a reveal/copy license-key action, billing and hosted-instance access. License keys never appear in public website files.
-- `/unleashed/` retains the detailed bot, exchange and installation information. Demo trading is advertised only for Bybit, as directed by the owner for the weekend release.
+- `/unleashed/` retains the detailed bot, exchange and installation information. Demo trading is not offered in the current release (owner decision 2026-10-24) for the weekend release.
 - Retired October 15 promotions and signup incentives are removed from public HTML.
 - `assets/redesign.css` / `assets/redesign.js` handle the homepage presentation. `assets/site.js` preserves the deployed billing, referral, hosting-availability and same-origin support integration. Product screenshots use illustrative data and make no performance claims.
+
+## Documentation (/docs/)
+
+`docs/` holds the customer user guide: one page per topic, with a GitBook-style sidebar, the tutorial video for each page, and `assets/docs.css` / `assets/docs.js`. The pages are **generated** from the app repository's `docs/user-guide/*.md` by `node scripts/build-user-guide.mjs --site=<this checkout>`, the same source that renders the in-app User guide; the run also refreshes the `/docs/` entries in `sitemap.xml`. Edit the Markdown there and regenerate rather than editing these HTML files. Prices are never written into the docs; they link to the plans section here.
 
 ## Deploy on Netlify
 

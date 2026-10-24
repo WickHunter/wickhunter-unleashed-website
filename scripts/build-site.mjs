@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(root, 'dist');
 const entries = ['index.html', '404.html', 'favicon.svg', 'robots.txt', 'sitemap.xml', '_headers', '_redirects',
-  'assets', 'unleashed', 'thanks', 'terms', 'privacy', 'refunds', 'support', 'tutorials'];
+  'assets', 'unleashed', 'thanks', 'terms', 'privacy', 'refunds', 'support', 'tutorials', 'docs'];
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out);
 function copy(relative) {
