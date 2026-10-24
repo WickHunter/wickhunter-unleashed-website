@@ -16,6 +16,10 @@ look like one thing.
 - Retired October 15 promotions and signup incentives are removed from public HTML.
 - `assets/redesign.css` / `assets/redesign.js` handle the homepage presentation. `assets/site.js` preserves the deployed billing, referral, hosting-availability and same-origin support integration. Product screenshots use illustrative data and make no performance claims.
 
+## Documentation (/docs/)
+
+`docs/` holds the customer user guide: one page per topic, with a GitBook-style sidebar, the tutorial video for each page, and `assets/docs.css` / `assets/docs.js`. The pages are **generated** from the app repository's `docs/user-guide/*.md` by `node scripts/build-user-guide.mjs --site=<this checkout>`, the same source that renders the in-app User guide; the run also refreshes the `/docs/` entries in `sitemap.xml`. Edit the Markdown there and regenerate rather than editing these HTML files. Prices are never written into the docs; they link to the plans section here.
+
 ## Deploy on Netlify
 
 1. Connect this repository in Netlify.
