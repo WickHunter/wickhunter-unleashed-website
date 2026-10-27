@@ -27,6 +27,8 @@
 <p>TradingView reporting "delivered" only confirms the app received the alert, not that a trade opened. Always check Recent signals.</p>
 <h2 id="recommended-starter-configuration">Recommended starter configuration</h2>
 <p>A suggestion, not a default: Direction to match your strategy, Max longs/shorts 1, Pairs <b>Allowlist</b> with only the symbols your alerts use, a small Dollar base order, 3–5× leverage, DCA orders 0, Fixed % take profit, stop loss on.</p>
+<h2 id="duplicate-cooldown-and-minimum-time-between-entries">Duplicate cooldown and minimum time between entries</h2>
+<ul><li><b>Duplicate cooldown</b> (seconds) ignores the same open alert for the same pair repeated within that time. TradingView sometimes delivers an alert twice; this absorbs it.</li><li><b>Minimum time between new entries</b> (seconds, blank or 0 = off) is a separate, bot-wide wait: after the bot opens a deal, every open alert, on any pair, is refused with "Entry cooldown: next entry allowed in Xm Ys." until the time has passed. Closes, DCAs and TP/SL changes still work. An alert that did not open a deal does not start the wait, and the wait carries over a restart.</li></ul>
 <h2 id="the-ticker-trap">The {{ticker}} trap</h2>
 <p><code>{{ticker}}</code> resolves to the chart the alert was <b>created on</b>, forever. An alert built on a BTC chart keeps sending BTCUSDT. Write the symbol literally, for example <code>"symbol":"SOLUSDT"</code>, unless you deliberately build one alert per chart.</p>
 <h2 id="keep-the-secret-private">Keep the secret private</h2>

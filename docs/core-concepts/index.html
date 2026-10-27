@@ -26,6 +26,7 @@
 <p>The ladder and exits do not start until this order has actually filled on the exchange. The app records only the quantity and price the exchange confirms as filled.</p>
 <h2 id="dca-ladder">DCA ladder</h2>
 <p>Extra orders that add to a losing position. Distances are measured from the <b>original entry</b> and never move. Levels fill on touch, with no cooldown. Your worst case is the base order plus every level.</p>
+<p>DCA sizes can be dollars, % of balance or % of entry (converted once, at open), or <b>% of position</b>: each DCA adds that % of the position as it stands when it is sent, so a time-based DCA is the right size in any order. Sizes compound. Resting DCAs then go on the exchange one at a time; if the position changes first, the resting one is re-placed at the new size.</p>
 <h2 id="take-profit">Take profit</h2>
 <p>Measured from the <b>average entry</b> and re-placed after every fill. Fixed % rests a reduce-only limit on the exchange; a TP ladder rests one order per step. A trailing take profit arms at its activation level and then rides as the deal's stop. The optional funding-adjusted take profit moves the target only to cover net funding paid; it is never nearer than the plain target.</p>
 <h2 id="stop-loss">Stop loss</h2>
