@@ -31,3 +31,4 @@
  .support-launch{width:52px;height:52px;min-height:52px;padding:0}
  .support-launch span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 }
+.footer-guides>span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#aaa2b9}
