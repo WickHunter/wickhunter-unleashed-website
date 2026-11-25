@@ -24,7 +24,7 @@ look like one thing.
 
 1. Connect this repository in Netlify.
 2. Publish directory: `dist`.
-3. Build command: `node scripts/build-site.mjs` (configured in `netlify.toml`). The build copies only public pages and assets; tests and internal repository files are excluded.
+3. Build command: `node scripts/build-site.mjs` (configured in `netlify.toml`). The build copies only public pages and assets; tests and internal repository files are excluded. It then adds the Plausible analytics snippet and `assets/analytics.js` (the "Checkout Start" and "Discord Join" click events) to every HTML file in `dist`, so generated `docs/` pages are covered without hand edits.
 4. Point the custom domain (`wickhunterunleashed.com`) at the Netlify site.
 
 `_redirects` sends `/buy`, `/billing`, and `/customer` to the Hub (the source
@@ -91,6 +91,8 @@ _headers              Security headers + caching
 _redirects            /buy, /billing, and /customer → the Hub
 netlify.toml          public-only build into dist/
 robots.txt            Crawling rules
+liquidation-bot/ …    SEO guide pages (also bybit-trading-bot/, tradingview-webhook-bot/,
+                       crypto-dca-bot/, 3commas-alternative/); styles in assets/guides.css
 sitemap.xml           /, /unleashed/, /terms/, /privacy/, /refunds/
 ```
 

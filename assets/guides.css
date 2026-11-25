@@ -1,0 +1,47 @@
+/* SEO guide pages (/liquidation-bot/, /bybit-trading-bot/, ...) and the
+   five-column product footer. Builds on site.css + product-marketing.css. */
+.guide-hero{padding:72px 0 40px}
+.guide-hero .product-hero-copy{margin-bottom:0}
+.guide-hero .product-hero-copy h1{font-size:clamp(34px,4.6vw,58px)}
+.guide-risk{color:var(--dim);font-size:12px;line-height:1.6;margin:18px auto 0;max-width:620px}
+.guide-body{padding:24px 0 40px}
+.guide-body h2{font-size:22px;margin-top:40px}
+.guide-body p,.guide-body ul,.guide-body ol{font-size:15.5px;line-height:1.75}
+.guide-body ol{margin:0 0 14px 20px;padding:0;color:var(--muted)}
+.guide-body li{margin:0 0 9px}
+.guide-body li::marker{color:var(--link)}
+.guide-note{border:1px solid var(--line);background:var(--raised);border-radius:12px;padding:14px 16px;font-size:13.5px!important}
+.guide-table-wrap{overflow-x:auto;margin:6px 0 18px;border:1px solid var(--line);border-radius:12px;background:var(--raised)}
+.guide-table{width:100%;border-collapse:collapse;font-size:13.5px;line-height:1.55}
+.guide-table th,.guide-table td{text-align:left;vertical-align:top;padding:11px 14px;border-bottom:1px solid var(--line-soft);color:var(--muted)}
+.guide-table thead th{color:var(--ink);font-size:12px;letter-spacing:.02em;background:var(--inset)}
+.guide-table tbody th{color:var(--ink);font-weight:650;white-space:nowrap}
+.guide-table tr:last-child>*{border-bottom:0}
+.guide-table td{overflow-wrap:anywhere}
+.guide-faq{padding-top:40px}
+.guide-faq .faq-item.open .faq-a{max-height:420px}
+.guide-faq .faq-a p{font-size:13.5px}
+.guide-cta{display:flex;align-items:center;justify-content:space-between;gap:30px;border:1px solid var(--accent-line);background:var(--raised);border-radius:var(--r);padding:28px}
+.guide-cta h2{font-size:24px;margin-bottom:8px;color:var(--ink)}
+.guide-cta p{color:var(--muted);font-size:14px;margin:0;max-width:560px}
+.guide-cta .guide-risk{margin:10px 0 0}
+.guide-cta .hero-actions{flex:none}
+.guide-links{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin-top:26px}
+.guide-links .eyebrow{width:100%;margin-bottom:2px}
+.guide-link,.guide-link:visited{border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;color:var(--ink)}
+.guide-link:hover{border-color:var(--accent-line);text-decoration:none}
+/* Product footer with the Guides column: brand + four link columns. */
+.footer-grid{grid-template-columns:1.4fr .75fr .95fr .75fr 1.15fr}
+@media (max-width:1080px){.footer-grid{grid-template-columns:repeat(4,1fr)}.footer-about{grid-column:1 / -1}}
+@media (max-width:720px){
+  .guide-hero{padding:44px 0 24px}
+  .guide-body h2{font-size:20px}
+  .guide-body p,.guide-body ul,.guide-body ol{font-size:15px}
+  .guide-table{font-size:12.5px}
+  .guide-table th,.guide-table td{padding:9px 10px}
+  .guide-table tbody th{white-space:normal}
+  .guide-cta{flex-direction:column;align-items:stretch;padding:22px}
+  .guide-cta .hero-actions{display:grid}
+  .footer-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:450px){.footer-grid{grid-template-columns:1fr}}

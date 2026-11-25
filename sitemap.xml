@@ -26,6 +26,31 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://wickhunterunleashed.com/liquidation-bot/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://wickhunterunleashed.com/bybit-trading-bot/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://wickhunterunleashed.com/tradingview-webhook-bot/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://wickhunterunleashed.com/crypto-dca-bot/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://wickhunterunleashed.com/3commas-alternative/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://wickhunterunleashed.com/tutorials/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
