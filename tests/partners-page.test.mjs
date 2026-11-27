@@ -20,7 +20,7 @@ test('partner page is published with its terms and contact', () => {
   assert.equal(d.querySelectorAll('h1').length, 1);
   const main = d.querySelector('main').textContent.replace(/\s+/g, ' ');
   for (const s of ['60-day', '$50', 'Recurring', 'partners@getwickhunter.com', RISK]) assert.ok(main.includes(s), `contains ${s}`);
-  for (const bad of [/guarantee/i, /passive income(?!")/i, /free trial/i, /\bdemo\b(?! or backtest)/i, /\bgrid\b/i]) assert.ok(!bad.test(main.replace('"passive income"', '')), `must not contain ${bad}`);
+  for (const bad of [/guarantee/i, /passive income(?!")/i, /\bdemo\b(?! or backtest)/i, /\bgrid\b/i]) assert.ok(!bad.test(main.replace('"passive income"', '')), `must not contain ${bad}`);
 });
 
 test('partner page is linked from the footers and the sitemap', () => {

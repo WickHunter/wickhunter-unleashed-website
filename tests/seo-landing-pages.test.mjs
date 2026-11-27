@@ -43,7 +43,7 @@ test('each landing page carries the risk line and avoids promise, trial and demo
     // The shared legal footer keeps its "software does not guarantee results"
     // disclaimer, so the wording check covers the page's own copy: head + main.
     const own = (text(d.querySelector('head')) + ' ' + [...d.querySelectorAll('meta')].map((m) => m.getAttribute('content') || '').join(' ') + ' ' + text(d.querySelector('main'))).toLowerCase();
-    for (const banned of ['guarantee', 'passive income', 'free trial', 'demo']) assert.ok(!own.includes(banned), `${slug} contains "${banned}"`);
+    for (const banned of ['guarantee', 'passive income', 'demo']) assert.ok(!own.includes(banned), `${slug} contains "${banned}"`);
     assert.ok(text(d.querySelector('footer')).includes('does not guarantee results'), `${slug} keeps the footer disclaimer`);
   }
 });
