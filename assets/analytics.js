@@ -2,6 +2,7 @@
 // page's <head> by scripts/build-site.mjs; this file only reports clicks.
 //   "Checkout Start": any link to /buy (any plan) or to the checkout.
 //   "Discord Join":   any discord.gg link.
+//   "Trial Start":    any link to the Hub trial page (/trial).
 (function () {
   function send(name, props) {
     if (typeof window.plausible !== 'function') return;
@@ -24,6 +25,7 @@
     var url;
     try { url = new URL(link.getAttribute('href'), window.location.href); } catch (_) { return; }
     if (url.hostname === 'discord.gg' || url.hostname === 'www.discord.gg') { send('Discord Join'); return; }
+    if (/(^|\.)wickhunterunleashed\.com$/.test(url.hostname) && (url.pathname.replace(/\/+$/, '') === '/trial')) { send('Trial Start'); return; }
     if (isCheckout(url)) {
       var plan = planFor(link, url);
       send('Checkout Start', plan ? { plan: plan } : null);
